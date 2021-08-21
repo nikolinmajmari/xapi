@@ -11,26 +11,10 @@ export interface ContextHandlerInterface {
   setSuccessor(successor: ContextHandlerInterface): void;
 }
 
-export interface RequestHandlerInterface {
-  handle(context: RoutingContextInterface): void;
-  setSuccessor(successor: RequestHandlerInterface): RequestHandlerInterface;
-}
-
-export class RequestHandler implements RequestHandlerInterface {
-  constructor() {}
-  handle(context: RoutingContextInterface): void {
-    throw new Error("Method not implemented.");
-  }
-
-  setSuccessor(successor: RequestHandlerInterface): RequestHandlerInterface {
-    throw new Error("Method not implemented.");
-  }
-}
-
 interface LayerInterface {
   useMiddleware(
     path: string,
-    handler: RequestHandlerInterface | Function,
+    handler: ContextHandlerInterface | Function,
     method: HttpMethod,
   ): void;
 }
@@ -58,9 +42,9 @@ interface LayerInterface {
  * @method setSuccessor
  * @method handle
  */
-export class FunctionHandler implements RequestHandlerInterface {
+export class FunctionHandler implements ContextHandlerInterface {
   private handler: Function;
-  private successor?: RequestHandlerInterface;
+  private successor?: ContextHandlerInterface;
   constructor(handler: Function) {
     this.handler = handler;
   }
@@ -69,9 +53,8 @@ export class FunctionHandler implements RequestHandlerInterface {
      * @param successor
      * @returns
      */
-  setSuccessor(successor: RequestHandlerInterface): RequestHandlerInterface {
+  setSuccessor(successor: ContextHandlerInterface) {
     this.successor = successor;
-    return this;
   }
   handle(context: RoutingContextInterface) {
     this.handler(
@@ -95,10 +78,10 @@ export class FunctionHandler implements RequestHandlerInterface {
  * @property handlers
  * @property methods
  */
-export class LayerHandler implements LayerInterface, RequestHandlerInterface {
+export class LayerHandler implements LayerInterface, ContextHandlerInterface {
   private route: Route;
-  private successor?: RequestHandlerInterface;
-  private handelers: RequestHandlerInterface[];
+  private successor?: ContextHandlerInterface;
+  private handelers: ContextHandlerInterface[];
   private methods: HttpMethod[];
 
   setRoute(route?: Route) {
@@ -122,7 +105,7 @@ export class LayerHandler implements LayerInterface, RequestHandlerInterface {
 
   useMiddleware(
     path: string = "/",
-    handler: RequestHandlerInterface,
+    handler: ContextHandlerInterface,
     method: HttpMethod = HttpMethod.ALL,
   ) {
     if (path == "/" || path == "") {
@@ -195,7 +178,7 @@ export class LayerHandler implements LayerInterface, RequestHandlerInterface {
       let createMethodIterator = (method: HttpMethod) => {
         return new WhereIterator(
           this.handelers,
-          (item: RequestHandlerInterface, index: number) => {
+          (item: ContextHandlerInterface, index: number) => {
             return this.methods[index] == HttpMethod.ALL ||
               this.methods[index] == method;
           },
@@ -305,10 +288,9 @@ export class LayerHandler implements LayerInterface, RequestHandlerInterface {
     return null;
   }
 
-  setSuccessor(successor: RequestHandlerInterface): LayerHandler {
+  setSuccessor(successor: ContextHandlerInterface) {
     this.successor = successor;
     this.chainHandlers();
-    return this;
   }
   async invokeSuccessor(context: RoutingContextInterface) {
     if (this.successor != null) {
@@ -321,7 +303,7 @@ export class LayerHandler implements LayerInterface, RequestHandlerInterface {
   }
 }
 
-class ChainedSuccessor extends RequestHandler {
+class ChainedSuccessor implements ContextHandlerInterface {
   handle(context: RoutingContextInterface): void {
     //console.log( `callin successor ${request.method}  basepath ${this.layer?.getRoute()?.getPattern()}  url ${request.url}  ${this.layer?.getRoute()?.isStrictMatch(request.url)}`,);
     //console.log(`${HttpMethod.GET}`);
@@ -354,12 +336,11 @@ class ChainedSuccessor extends RequestHandler {
       this.successor?.handle(context);
     }
   }
-  setSuccessor(successor: RequestHandlerInterface): RequestHandlerInterface {
+  setSuccessor(successor: ContextHandlerInterface) {
     this.successor = successor;
-    return this;
   }
 
-  setMethodSuccessor(successor: RequestHandlerInterface, method: HttpMethod) {
+  setMethodSuccessor(successor: ContextHandlerInterface, method: HttpMethod) {
     switch (method) {
       case HttpMethod.GET:
         this.setGetSuccessor(successor);
@@ -374,30 +355,30 @@ class ChainedSuccessor extends RequestHandler {
     super();
     this.layer = parent;
   }
-  setGetSuccessor(successor: RequestHandlerInterface) {
+  setGetSuccessor(successor: ContextHandlerInterface) {
     this.getSuccessor = successor;
   }
 
-  setPostSuccessor(successor: RequestHandlerInterface) {
+  setPostSuccessor(successor: ContextHandlerInterface) {
     this.postSuccessor = successor;
   }
 
-  private getSuccessor?: RequestHandlerInterface;
-  private postSuccessor?: RequestHandlerInterface;
-  private patchSuccessor?: RequestHandlerInterface;
-  private successor?: RequestHandlerInterface;
+  private getSuccessor?: ContextHandlerInterface;
+  private postSuccessor?: ContextHandlerInterface;
+  private patchSuccessor?: ContextHandlerInterface;
+  private successor?: ContextHandlerInterface;
   private layer?: LayerHandler;
 }
 
-class ChainHandler extends RequestHandler {
+class ChainHandler implements ContextHandlerInterface {
   private isRegex: boolean = false;
   private baseRoute?: Route;
-  private successor?: RequestHandlerInterface;
+  private successor?: ContextHandlerInterface;
   private routes: Map<string, LayerHandler> = new Map();
 
   use(
     path: string,
-    handler: RequestHandlerInterface,
+    handler: ContextHandlerInterface,
     method: HttpMethod = HttpMethod.ALL,
   ) {
     const basePath = path.split("/").slice(1, 2).join("/");
@@ -437,7 +418,7 @@ class ChainHandler extends RequestHandler {
       throw "Not handled middleware";
     }
   }
-  setSuccessor(successor: RequestHandlerInterface): RequestHandlerInterface {
+  setSuccessor(successor: ContextHandlerInterface) {
     this.successor = successor;
     for (let [key, value] of this.routes) {
       value.setSuccessor(successor);
@@ -446,12 +427,12 @@ class ChainHandler extends RequestHandler {
   }
 }
 
-class RegexChainHandler implements RequestHandlerInterface {
+class RegexChainHandler implements ContextHandlerInterface {
   handle(context: RoutingContextInterface) {
     throw new Error("Method not implemented.");
   }
 
-  setSuccessor(successor: RequestHandlerInterface): RequestHandlerInterface {
+  setSuccessor(successor: ContextHandlerInterface) {
     throw new Error("Method not implemented.");
   }
 
