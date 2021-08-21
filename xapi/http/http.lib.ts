@@ -25,10 +25,13 @@ export class HttpContext implements HttpContextInterface {
 
 export class Response {
   private readonly request: ServerRequest;
+
+  headers: Headers;
   constructor(request: ServerRequest) {
     this.request = request;
+    this.headers = new Headers();
   }
   send(content: string) {
-    this.request.respond({ body: content });
+    this.request.respond({ headers: this.headers, body: content });
   }
 }

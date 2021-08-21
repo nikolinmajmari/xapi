@@ -3,16 +3,11 @@ import {
   Router as BaseRouter,
   RoutingContextHandlerAdapter,
 } from "./router/router.ts";
-import { RoutingContextInterface } from "./router/router.lib.ts";
 import { ContextHandlerInterface } from "./router/router.lib.ts";
+import { HttpContextInterface } from "./http/http.lib.ts";
+import { RequestSession, SessionContext } from "./session/session.ts";
 
-export class Context extends HttpContext implements RoutingContextInterface {
-  getRequestMethod(): string {
-    return this.request.method;
-  }
-  getRequestUrl(): string {
-    return this.request.url;
-  }
+export class Context extends HttpContext {
 }
 
 export class ContextHandlerAdapter extends RoutingContextHandlerAdapter {
@@ -23,7 +18,7 @@ export class ContextHandlerAdapter extends RoutingContextHandlerAdapter {
   handle(context: Context): void {
     this.handler(context, () => this.invokeSuccessor(context));
   }
-  setSuccessor(successor: ContextHandlerInterface): void {
+  setSuccessor(successor: ContextHandlerInterface<HttpContextInterface>): void {
     this.successor = successor;
   }
   invokeSuccessor(context: Context) {

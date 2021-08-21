@@ -1,20 +1,13 @@
+import { HttpContextInterface } from "../http/http.lib.ts";
 import { HttpMethod } from "../http/http.lib.ts";
-import {
-  ContextHandlerInterface,
-  RoutingContextInterface,
-} from "./router.lib.ts";
-import {
-  FunctionHandler,
-  LayerHandler,
-  RequestHandler,
-  RequestHandlerInterface,
-} from "./router.lib.ts";
+import { ContextHandlerInterface } from "./router.lib.ts";
+import { LayerHandler } from "./router.lib.ts";
 
 function isString(value: string | String) {
   return typeof value === "string" || value instanceof String;
 }
 
-interface RouterInterface<T extends BaseContextHandlerAdapter> {
+interface RouterInterface<T extends RoutingContextHandlerAdapter> {
   get(handler: Router<T> | Function): void;
   get(
     path: string | string[],
@@ -71,7 +64,7 @@ interface RouterInterface<T extends BaseContextHandlerAdapter> {
   ): void;
 }
 
-export class Router<T extends BaseContextHandlerAdapter>
+export class Router<T extends RoutingContextHandlerAdapter>
   implements RouterInterface<T> {
   protected handler: LayerHandler = new LayerHandler();
   get(handler: Router<T> | Function): void;
@@ -294,7 +287,7 @@ export class Router<T extends BaseContextHandlerAdapter>
             } else {
               this.handler.useMiddleware(
                 "/",
-                new FunctionHandler(item),
+                new RoutingContextHandlerAdapter(item),
                 params[1] as HttpMethod,
               );
             }
@@ -303,7 +296,7 @@ export class Router<T extends BaseContextHandlerAdapter>
       } else if (params[0] instanceof Function) {
         this.handler.useMiddleware(
           "/",
-          new FunctionHandler(params[0]),
+          new RoutingContextHandlerAdapter(params[0]),
           params[1] as HttpMethod,
         );
       }
@@ -335,7 +328,7 @@ export class Router<T extends BaseContextHandlerAdapter>
             } else if (item instanceof Function) {
               this.handler.useMiddleware(
                 params[0] as string,
-                new FunctionHandler(item),
+                new RoutingContextHandlerAdapter(item),
                 params[2] as HttpMethod,
               );
             } else {
@@ -373,7 +366,7 @@ export class Router<T extends BaseContextHandlerAdapter>
                   } else if (item instanceof Function) {
                     this.handler.useMiddleware(
                       path,
-                      new FunctionHandler(item),
+                      new RoutingContextHandlerAdapter(item),
                       params[2] as HttpMethod,
                     );
                   } else {
@@ -391,7 +384,7 @@ export class Router<T extends BaseContextHandlerAdapter>
             if (params[1] instanceof Function) {
               this.handler.useMiddleware(
                 path,
-                new FunctionHandler(params[1]),
+                new RoutingContextHandlerAdapter(params[1]),
                 params[2] as HttpMethod,
               );
             }
@@ -403,7 +396,7 @@ export class Router<T extends BaseContextHandlerAdapter>
         if (params[1] instanceof Function) {
           this.handler.useMiddleware(
             params[0] as string,
-            new FunctionHandler(params[1]),
+            new RoutingContextHandlerAdapter(params[1]),
             params[2] as HttpMethod,
           );
         }
@@ -416,20 +409,21 @@ export class Router<T extends BaseContextHandlerAdapter>
   }
 }
 
-export class BaseContextHandlerAdapter implements ContextHandlerInterface {
-  protected successor?: ContextHandlerInterface;
-  protected handler: Function;
+export class RoutingContextHandlerAdapter
+  implements ContextHandlerInterface<HttpContextInterface> {
+  successor?: ContextHandlerInterface<HttpContextInterface>;
+  handler: Function;
   constructor(handler: Function) {
     this.handler = handler;
   }
 
-  handle(context: RoutingContextInterface): void {
+  handle(context: HttpContextInterface): void {
     this.handler(context, () => this.invokeSuccessor(context));
   }
-  setSuccessor(successor: ContextHandlerInterface): void {
+  setSuccessor(successor: ContextHandlerInterface<HttpContextInterface>): void {
     this.successor = successor;
   }
-  invokeSuccessor(context: RoutingContextInterface) {
+  invokeSuccessor(context: HttpContextInterface) {
     if (this.successor) {
       this.successor.handle(context);
     }

@@ -2,11 +2,7 @@ import {
   serve,
   ServerRequest,
 } from "https://deno.land/std@0.104.0/http/server.ts";
-import { BaseContextHandlerAdapter } from "../router/router.ts";
-import { RoutingContextInterface } from "../router/router.lib.ts";
-import { FunctionHandler } from "../router/router.lib.ts";
-import { RequestHandlerInterface } from "../router/router.lib.ts";
-import { Context, Router } from "../framework.ts";
+import { Context, ContextHandlerAdapter, Router } from "../framework.ts";
 import { HttpContext, HttpContextInterface } from "../http/http.lib.ts";
 
 export default class Application extends Router {
@@ -18,7 +14,7 @@ export default class Application extends Router {
   _closeChain() {
     this.handler.setRoute();
     this.handler.setSuccessor(
-      new FunctionHandler(
+      new ContextHandlerAdapter(
         (ctx: HttpContext, next: Function) => {
           ctx.request.respond({ status: 404, body: "route not found" });
         },
