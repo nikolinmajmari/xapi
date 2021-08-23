@@ -5,7 +5,10 @@ import {
 } from "./router/router.ts";
 import { ContextHandlerInterface } from "./router/router.lib.ts";
 import { HttpContextInterface } from "./http/http.lib.ts";
-import { RequestSession, SessionContext } from "./session/session.ts";
+import {
+  SessionContextInterface,
+  SessionInterface,
+} from "./session/session.ts";
 
 export class Context extends HttpContext {
 }

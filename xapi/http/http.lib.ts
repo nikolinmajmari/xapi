@@ -1,4 +1,4 @@
-import { ServerRequest } from "https://deno.land/std@0.104.0/http/server.ts";
+import { ServerRequest } from "https://deno.land/std/http/server.ts";
 
 export enum HttpMethod {
   GET = "GET",
@@ -10,16 +10,16 @@ export enum HttpMethod {
 }
 
 export interface HttpContextInterface {
-  request: ServerRequest;
+  request: Request;
   response: Response;
 }
 
 export class HttpContext implements HttpContextInterface {
-  readonly request: ServerRequest;
+  readonly request: Request;
   readonly response: Response;
   constructor(request: ServerRequest) {
-    this.request = request;
-    this.response = new Response(this.request);
+    this.request = new Request(request);
+    this.response = new Response(request);
   }
 }
 
@@ -33,5 +33,21 @@ export class Response {
   }
   send(content: string) {
     this.request.respond({ headers: this.headers, body: content });
+  }
+}
+
+export class Request {
+  body: string | Deno.Reader | undefined = undefined;
+  headers: Headers;
+  params: { [key: string]: any } = {};
+  readonly serverRequest: ServerRequest;
+  url: string;
+  method: string;
+  constructor(request: ServerRequest) {
+    this.serverRequest = request;
+    this.body = request.body;
+    this.method = request.method;
+    this.url = request.url;
+    this.headers = request.headers;
   }
 }

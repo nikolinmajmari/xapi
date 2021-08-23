@@ -1,15 +1,17 @@
 import { HttpContext, HttpContextInterface, Response } from "../http/http.lib";
 
-interface SecurityContextInterface {
+export interface SecurityContextInterface {
   user: UserInterface;
   getUser();
+  isGranted(role: string | string[]): boolean;
 }
 
-class SecurityContext implements SecurityContextInterface {
+class SecurityContext extends HttpContext implements SecurityContextInterface {
   user: UserInterface;
   getUser() {
-    throw new Error("Method not implemented.");
+    return this.user;
   }
+
   isGranted(role: string | string[]): boolean {
     if (typeof role == "string") {
       return this.user.roles.includes(role);
@@ -21,11 +23,9 @@ class SecurityContext implements SecurityContextInterface {
     }
     return false;
   }
-  request: any;
-  response: Response;
 }
 
-interface UserInterface {
+export interface UserInterface {
   id: number;
   roles: string[];
   getId();

@@ -1,8 +1,6 @@
-import {
-  serve,
-  ServerRequest,
-} from "https://deno.land/std@0.104.0/http/server.ts";
+import { serve, ServerRequest } from "https://deno.land/std/http/server.ts";
 import { Context, ContextHandlerAdapter, Router } from "../framework.ts";
+import { Request } from "../http/http.lib.ts";
 import { HttpContext, HttpContextInterface } from "../http/http.lib.ts";
 
 export default class Application extends Router {
@@ -16,7 +14,8 @@ export default class Application extends Router {
     this.handler.setSuccessor(
       new ContextHandlerAdapter(
         (ctx: HttpContext, next: Function) => {
-          ctx.request.respond({ status: 404, body: "route not found" });
+          console.log(ctx.request.body);
+          ctx.response.send("route not found");
         },
       ),
     );
