@@ -96,13 +96,13 @@ export class LayerHandler
 
   async handle(context: HttpContextInterface) {
     let strict = (this.route?.isStrictMatch(context.request.url) ?? false);
-    // console.log(this.methods);
+    //console.log(this.methods);
     // console.log(
-    //  `LayerHandler:handle strict:${strict} basepath:${
-    //   this.route?.getPattern()
-    // } for uri ${context.request.url} `,
-    //);
-    //console.log(this.route.getPattern(), this.methods);
+    //   `LayerHandler:handle strict:${strict} basepath:${
+    //     this.route?.pattern
+    //   } for uri ${context.request.url} `,
+    // );
+    // console.log(this.route.pattern, this.methods);
     if (strict) {
       let start = 0;
       for (; start < this.handelers.length; start++) {
@@ -187,7 +187,7 @@ export class LayerHandler
           }
         }
       });
-      // console.log("call iterators for path", this.route.getPattern());
+      // console.log("call iterators for path", this.route.pattern);
       //console.log(this.handelers);
       let start = 0;
       let end = 0;
@@ -278,7 +278,7 @@ class ChainedSuccessor
   handle(context: HttpContextInterface): void {
     // console.log(
     //   `callin successor ${context.request.method}  basepath ${
-    //     this.layer?.getRoute()?.getPattern()
+    //     this.layer?.getRoute()?.pattern
     //   }  url ${context.request.url}  ${
     //     this.layer?.getRoute()?.isStrictMatch(context.request.url)
     //   }`,
@@ -367,7 +367,9 @@ class ChainHandler implements ContextHandlerInterface<HttpContextInterface> {
       // todo set base path for the layer
     }
     // todo remove debug
-    //console.log( `[ChainHandler::use] basePath: ${basePath}  deepPath: ${deepPath} method: ${method}`,);
+    console.log(
+      `[ChainHandler::use] basePath: ${basePath}  deepPath: ${deepPath} method: ${method}`,
+    );
     (this.routes.get(basePath) as LayerHandler).useMiddleware(
       deepPath,
       handler,
@@ -378,8 +380,9 @@ class ChainHandler implements ContextHandlerInterface<HttpContextInterface> {
   setRoute(route: Route) {
     this.baseRoute = route;
     for (let key of this.routes.keys()) {
+      console.log("connecting ", route.pattern, "with key ", key);
       let deepRoute: Route = new Route(HttpMethod.ALL, key);
-      deepRoute.bindToParent(this.baseRoute);
+      deepRoute.connectWithParent(this.baseRoute);
       this.routes.get(key)?.setRoute(deepRoute);
     }
   }
@@ -387,12 +390,12 @@ class ChainHandler implements ContextHandlerInterface<HttpContextInterface> {
   handle(context: HttpContextInterface) {
     // console.log(
     //   `MapHandler:handle paths:${[...this.routes.keys()]} basepath:${
-    //     this.baseRoute?.getPattern()
+    //     this.baseRoute?.pattern
     //   } for uri ${context.request.url}`,
     // );
-    let pattern = this.baseRoute?.isregex()
-      ? new RegExp(this.baseRoute?.getPattern())
-      : this.baseRoute?.getPattern();
+    let pattern = this.baseRoute?.isRegex
+      ? new RegExp(this.baseRoute?.pattern)
+      : this.baseRoute?.pattern;
     let key = context.request.url.replace(pattern ?? "", "").split("/")[0];
     // console.log(pattern);
     //console.log("found key ",request.url.replace(pattern, ""),key," on map handler",);
@@ -421,7 +424,7 @@ class RegexChainHandler
   private baseRoute?: Route;
   private handler?: LayerHandler;
   private regex?: RegExp;
-  private stringRegex?: string;
+  private stringRegex?: string | null;
   private param?: string | null;
   private successor?: ContextHandlerInterface<HttpContextInterface>;
   constructor() {
@@ -432,7 +435,7 @@ class RegexChainHandler
     this.baseRoute = route;
     let deepRoute: Route = new Route(
       HttpMethod.ALL,
-      this.stringRegex ?? "([^/]*)",
+      this.stringRegex != null ? `(${this.stringRegex})` : "([^/]*)",
     );
     deepRoute.setRegex(true);
     deepRoute.bindToParent(this.baseRoute);
@@ -441,7 +444,7 @@ class RegexChainHandler
 
   handle(context: HttpContextInterface) {
     let url = context.request.url;
-    let local = url.replace(this.baseRoute?.getLossyRegex() ?? "", "").split(
+    let local = url.replace(this.baseRoute?.prefixRegex ?? "", "").split(
       "/",
     )[0];
     context.request.params = {
@@ -467,6 +470,7 @@ class RegexChainHandler
     const paramParser = new ParamParser(basePath);
     this.regex = paramParser.getRegex();
     this.param = paramParser.getParam();
+    this.stringRegex = paramParser.getRegexString();
     if (this.handler == undefined) {
       this.handler = new LayerHandler();
     }
@@ -475,29 +479,45 @@ class RegexChainHandler
 }
 
 class Route {
-  constructor(
-    private method: HttpMethod,
-    private pattern: string,
-    private regex?: RegExp,
-    private strictMatch?: RegExp,
-    private lossyMatch?: RegExp,
-    private isRegex: boolean = false,
-  ) {
+  #method: HttpMethod;
+  #pattern: string;
+  #strictRegex?: RegExp;
+  #prefixRegex?: RegExp;
+  #isRegex: boolean;
+  constructor(method: HttpMethod, route: string) {
+    this.#method = method;
+    this.#pattern = route;
+    this.#isRegex = false;
   }
-
   bindToParent(parent: Route) {
-    this.pattern = parent.pattern + this.pattern + "/";
-    this.strictMatch = new RegExp(`^${this.pattern}$`);
-    this.lossyMatch = new RegExp(`^${this.pattern}`);
-    this.isRegex = this.isRegex || parent.isRegex;
+    this.connectWithParent(parent);
+  }
+  connectWithParent(parent: Route) {
+    console.log("connected ", parent.pattern, " with self to ", this.#pattern);
+    this.#pattern = `${parent.pattern ?? "/"}${this.#pattern ?? ""}/`;
+    console.log(this.#pattern);
+    this.#strictRegex = new RegExp(`^${this.pattern}$`);
+    this.#prefixRegex = new RegExp(`^${this.pattern}`);
+    this.#isRegex = this.#isRegex || parent.#isRegex;
   }
 
   setRegex(status: boolean) {
-    this.isRegex = status;
+    this.#isRegex = status;
   }
-
-  isregex() {
-    return this.isRegex;
+  get isRegex(): boolean {
+    return this.#isRegex;
+  }
+  get method(): HttpMethod {
+    return this.#method;
+  }
+  get pattern(): string {
+    return this.#pattern;
+  }
+  get strictRegex(): RegExp | undefined {
+    return this.#strictRegex;
+  }
+  get prefixRegex(): RegExp | undefined {
+    return this.#prefixRegex;
   }
 
   isStrictMatch(uri: string) {
@@ -510,27 +530,12 @@ class Route {
     //   this.strictMatch?.test(uri),
     //   this.strictMatch?.test(uri + "/"),
     // );
-    return (this.strictMatch?.test(uri) || this.strictMatch?.test(uri + "/"));
+    return (this.#strictRegex?.test(uri) || this.#strictRegex?.test(uri + "/"));
   }
 
-  isLossyMatch(uri: string) {
-    return this.lossyMatch?.test(uri) ?? false;
-  }
-
-  canHandle(request: ServerRequest) {
-    return request.method == this.method || this.method == HttpMethod.ALL;
-  }
-
-  getStrictRegex() {
-    return this.strictMatch;
-  }
-
-  getLossyRegex() {
-    return this.lossyMatch;
-  }
-
-  getPattern(): string {
-    return this.pattern;
+  isPrefixMatch(uri: string) {
+    return (this.#prefixRegex?.test(uri) ||
+      this.#prefixRegex?.test(uri + "/")) ?? false;
   }
 }
 

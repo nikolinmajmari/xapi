@@ -12,11 +12,14 @@ const app = new Application();
 app.get("/users", (ctx: HttpContext, next: Function) => {
   ctx.response.send("hey from users");
 });
-app.get("/users/:id/edit/:property", (ctx: HttpContext, next: Function) => {
-  ctx.response.send(
-    "hey from users" + ctx.request.params.id + " prop " +
-      ctx.request.params.property,
-  );
-});
+app.get(
+  "/users/:id(\\d*)/prop/:property",
+  (ctx: HttpContext, next: Function) => {
+    ctx.response.send(
+      "hey from users" + ctx.request.params.id + " prop " +
+        ctx.request.params.property,
+    );
+  },
+);
 
 app.listen();
