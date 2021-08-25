@@ -37,9 +37,10 @@ export class Response {
 }
 
 export class Request {
-  body: string | Deno.Reader | undefined = undefined;
+  body: string | Deno.Reader | undefined | { [key: string]: any } = undefined;
   headers: Headers;
   params: { [key: string]: any } = {};
+  query: { [key: string]: any } = {};
   readonly serverRequest: ServerRequest;
   url: string;
   method: string;

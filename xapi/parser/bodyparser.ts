@@ -16,8 +16,15 @@ export default async function BodyParser(ctx: HttpContext, next: Function) {
     request.headers.get("content-type") == "application/json"
   ) {
     const data = await Deno.readAll(request.body as Deno.Reader);
-    request.body = JSON.parse(new TextDecoder().decode(data));
+    const jsonString = new TextDecoder().decode(data);
+    console.log(jsonString);
+    if (jsonString != null && jsonString != "") {
+      request.body = JSON.parse(new TextDecoder().decode(data));
+    }
   } else {
+    request.body = new TextDecoder().decode(
+      await Deno.readAll(request.body as Deno.Reader),
+    );
     console.log("Unsupported form data type");
   }
   next();
@@ -29,7 +36,7 @@ async function formParser(request: Request): Promise<any> {
   const parsed: { [key: string]: any } = {};
   stringData.split("&").forEach(function (value: string, index: number) {
     let chunks = value.split("=");
-    parsed[chunks[0]] = chunks[1];
+    parsed[chunks[0]] = decodeURI(chunks[1]);
   });
   return parsed;
 }

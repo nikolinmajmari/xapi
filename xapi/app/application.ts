@@ -2,11 +2,13 @@ import { serve, ServerRequest } from "https://deno.land/std/http/server.ts";
 import { Context, ContextHandlerAdapter, Router } from "../framework.ts";
 import { Request } from "../http/http.lib.ts";
 import { HttpContext, HttpContextInterface } from "../http/http.lib.ts";
+import QueryParser from "../parser/queryparser.ts";
 
 export default class Application extends Router {
   private port?: number;
   constructor() {
     super();
+    this.use(QueryParser); // used to parse query url , since router works only with url without query parameters
   }
 
   _closeChain() {

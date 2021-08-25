@@ -6,18 +6,20 @@ import Session from "./xapi/session/session.ts";
 import { FileSessionAdapter } from "./xapi/session/adapter.ts";
 import { SessionContextInterface } from "./xapi/session/session.ts";
 import { InMemorySessionAdapter } from "./xapi/session/adapter.ts";
-import BodyParser from "./xapi/bodyparser/bodyparser.ts";
+import BodyParser from "./xapi/parser/bodyparser.ts";
+import QueryParser from "./xapi/parser/queryparser.ts";
 const app = new Application();
-
+app.use(QueryParser);
 app.get("/users", (ctx: HttpContext, next: Function) => {
   ctx.response.send("hey from users");
 });
 app.get(
   "/users/:id(\\d*)/prop/:property",
   (ctx: HttpContext, next: Function) => {
+    let query: string = JSON.stringify(ctx.request.query);
     ctx.response.send(
       "hey from users" + ctx.request.params.id + " prop " +
-        ctx.request.params.property,
+        ctx.request.params.property + " query:" + query,
     );
   },
 );
