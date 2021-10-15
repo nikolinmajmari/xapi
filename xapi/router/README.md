@@ -54,6 +54,14 @@ You can create your own adapters to decide how handelers are invoked by the rout
   }
 } 
   ```
-  
-  6  
-  
+
+ ## export your router so you can use it ro route your web app 
+ ts```
+ 
+export default Router extends Router<RoutingContextHandlerAdapter>{};
+ 
+ ```
+ 
+Thanks for reading. 
+ 
+ 
