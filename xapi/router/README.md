@@ -56,9 +56,9 @@ You can create your own adapters to decide how handelers are invoked by the rout
   ```
 
  ## export your router so you can use it ro route your web app 
- ts```
+```ts
  
-export default Router extends Router<RoutingContextHandlerAdapter>{};
+ export default Router extends Router<RoutingContextHandlerAdapter>{};
  
  ```
  
