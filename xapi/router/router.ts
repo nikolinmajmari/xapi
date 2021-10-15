@@ -3,11 +3,9 @@ import { HttpMethod } from "../http/http.lib.ts";
 import { ContextHandlerInterface } from "./router.lib.ts";
 import { LayerHandler } from "./router.lib.ts";
 
-function isString(value: string | String) {
-  return typeof value === "string" || value instanceof String;
-}
-
-interface RouterInterface<T extends RoutingContextHandlerAdapter> {
+interface RouterInterface<
+  T extends ContextHandlerInterface<HttpContextInterface>,
+> {
   get(handler: Router<T> | Function): void;
   get(
     path: string | string[],
@@ -64,7 +62,12 @@ interface RouterInterface<T extends RoutingContextHandlerAdapter> {
   ): void;
 }
 
-export class Router<T extends RoutingContextHandlerAdapter>
+/**
+ * A wrapper around handler that defines a cleaner api to manage routes and middeware functions
+ * accepts as param an RoutingContextHandlerAdapter which implements ContextHandlerInterface this
+ * class defines how context is handled by middleware function
+ */
+export class Router<T extends ContextHandlerInterface<HttpContextInterface>>
   implements RouterInterface<T> {
   protected handler: LayerHandler = new LayerHandler();
   get(handler: Router<T> | Function): void;
@@ -409,10 +412,23 @@ export class Router<T extends RoutingContextHandlerAdapter>
   }
 }
 
+/**
+ * base class that defines how middleware functions should be defined and called
+ * implments context handler interface so this wrapper can be used by router
+ * override handle function to get a custom functionality
+ * create a router class that extends the new Adapter and you get your custom routing
+ * default api forces middleware functiosn of type
+ *  function (ctx:HttpContextInterface,next:Function){
+ *      // your
+ *      // code
+ *      // here
+ *  }
+ * but you can extend this class and override handle method for a custom functionality
+ */
 export class RoutingContextHandlerAdapter
   implements ContextHandlerInterface<HttpContextInterface> {
-  successor?: ContextHandlerInterface<HttpContextInterface>;
-  handler: Function;
+  protected successor?: ContextHandlerInterface<HttpContextInterface>;
+  protected handler: Function;
   constructor(handler: Function) {
     this.handler = handler;
   }

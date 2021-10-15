@@ -1,11 +1,19 @@
 import { ServerRequest } from "https://deno.land/std/http/server.ts";
 import { HttpContextInterface, HttpMethod } from "../http/http.lib.ts";
 
+/**
+ * defines how context is handled by router
+ */
 export interface ContextHandlerInterface<T extends HttpContextInterface> {
   handle(context: HttpContextInterface): void;
   setSuccessor(successor: ContextHandlerInterface<HttpContextInterface>): void;
 }
 
+/**
+ * layer is a component that is called ony for a particular prefix, holts a stack of middleware
+ * context handlers which are chained based on the specific http method
+ * this is the layer interface
+ */
 interface LayerInterface {
   useMiddleware(
     path: string,
@@ -17,9 +25,43 @@ interface LayerInterface {
 /**
  * Registers handelers for an middleware layer of a certain path
  *
- * @property route
- * @property handlers
- * @property methods
+ * @property route used for path matching and string operations for context handlers of lower layers
+ * @property handlers stack of context handlers that are called to handle request
+ * @property methods suported methods of context handers on stack
+ *
+ * structure
+ * start ----------------
+ * LayerHandler   /
+ *      middleware function ALL bodyParser
+ *      ChainHandler
+ *            path:home
+ *                LayerHandler /home
+ *                   middleware function GET getRooms
+ *            path:rooms
+ *                LayerHandler /rooms
+ *                    middleware function GET  getrooms
+ *                    middleware function POST  addRoom
+ *      middleware function GET index
+ *      middleware function ALL route not found
+ * end ------------------
+ *
+ * chain structure
+ * when the path of the LayerHandler does not matches the request path then all
+ * handlers that support all methods are called scince these are chained
+ * if the path of the route matches path of req for layer handler then the first handler that matches
+ * request method is called or the first handlers that matches all methods
+ * if an handler that matches all methods is followed by an handler that matches only one method then the successor
+ * of the handler that matches all methods is a ChainedSuccessor instance
+ * chained successor keeps references of next successors of all method types bettween two handlers
+ * of all method type so if request path strictly matches route of the handler then the ChainedSuccessor
+ * will invoke the next handler based on its method or it will skip to next all successor....
+ * cases :
+ * layer stack [ ALL , GET, POST, PUT, ALL , PATCH, DELETE, ALL]
+ * on strict match get are invoked  [ALL, GET, ALL, ALL]
+ * on strict match post are invoked [ALL,POST,ALL ,ALL]
+ * on non strict match are invoked [ALL,ALL,ALL]
+ * /users/:id   and /users/12 are a strict match
+ *
  */
 export class LayerHandler
   implements LayerInterface, ContextHandlerInterface<HttpContextInterface> {
@@ -33,7 +75,7 @@ export class LayerHandler
       this.route = route;
     }
 
-    //console.log("set route for ",this.handelers);
+    //propagate route to each context handler
     this.handelers.forEach((element) => {
       if (
         element instanceof ChainHandler || element instanceof RegexChainHandler
@@ -49,11 +91,18 @@ export class LayerHandler
     this.methods = [];
   }
 
+  /**
+   *
+   * @param path path of the middleware
+   * @param handler the context handler
+   * @param method supported mtehod by context handler
+   */
   useMiddleware(
     path: string = "/",
     handler: ContextHandlerInterface<HttpContextInterface>,
     method: HttpMethod = HttpMethod.ALL,
   ) {
+    // these are context handlers that are stricttly called  for the path of this handler
     if (path == "/" || path == "") {
       if (handler instanceof LayerHandler) {
         // todo force the method on the next layer
@@ -63,7 +112,7 @@ export class LayerHandler
         this.handelers.push(handler);
         this.methods.push(method);
       }
-    } else if (path[1] == ":" || path[1] == "(") {
+    } else if (path[1] == ":" || path[1] == "(") { // these are handlers that have route params ore regex epressions
       let regexChainHandler: RegexChainHandler;
       if (
         this.handelers.length > 0 &&
@@ -77,7 +126,7 @@ export class LayerHandler
         this.methods.push(HttpMethod.ALL);
       }
       regexChainHandler.use(path, handler, method);
-    } else {
+    } else { // these are handlers for the deeper layers
       let chainHandler: ChainHandler;
       if (
         this.handelers.length > 0 &&
@@ -273,6 +322,10 @@ export class LayerHandler
   }
 }
 
+/**
+ * A context handler used by layer to chain context handlers
+ *
+ */
 class ChainedSuccessor
   implements ContextHandlerInterface<HttpContextInterface> {
   handle(context: HttpContextInterface): void {
@@ -349,6 +402,12 @@ class ChainedSuccessor
   private layer?: LayerHandler;
 }
 
+/**
+ * type of context handler that is used as a switcher for diffrent types of paths
+ * /home
+ * /api
+ *
+ */
 class ChainHandler implements ContextHandlerInterface<HttpContextInterface> {
   private isRegex: boolean = false;
   private baseRoute?: Route;
@@ -419,6 +478,10 @@ class ChainHandler implements ContextHandlerInterface<HttpContextInterface> {
   }
 }
 
+/**
+ * switcher but with ony one path. Used for routes that contain regex or params
+ * params are also parsed here
+ */
 class RegexChainHandler
   implements ContextHandlerInterface<HttpContextInterface> {
   private baseRoute?: Route;
@@ -478,6 +541,9 @@ class RegexChainHandler
   }
 }
 
+/**
+ * holds infor about route information , used for regex operations
+ */
 class Route {
   #method: HttpMethod;
   #pattern: string;
@@ -540,7 +606,8 @@ class Route {
 }
 
 /**
- *
+ * used on layer handler to chain middleware function
+ * an iterator that iterates over elements of a list that fullfill a particular condition
  */
 
 class WhereIterator<T> {
@@ -579,6 +646,9 @@ class WhereIterator<T> {
   }
 }
 
+/**
+ * helper class for parsing params
+ */
 export class ParamParser {
   partition: String;
 
