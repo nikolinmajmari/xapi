@@ -10,25 +10,7 @@ import {
   SessionInterface,
 } from "./session/session.ts";
 
-export class Context extends HttpContext {
-}
-
 export class ContextHandlerAdapter extends RoutingContextHandlerAdapter {
-  constructor(handler: Function) {
-    super(handler);
-  }
-
-  handle(context: Context): void {
-    this.handler(context, () => this.invokeSuccessor(context));
-  }
-  setSuccessor(successor: ContextHandlerInterface<HttpContextInterface>): void {
-    this.successor = successor;
-  }
-  invokeSuccessor(context: Context) {
-    if (this.successor) {
-      this.successor.handle(context);
-    }
-  }
 }
 
 export class Router extends BaseRouter<ContextHandlerAdapter> {}

@@ -17,5 +17,4 @@ app.get("/", (ctx: HttpContextInterface, next: Function) => {
   ctx.response.send("this is index");
 });
 app.use("/notes", notesRouter);
-
 app.listen();

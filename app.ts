@@ -6,7 +6,7 @@ import Session from "./xapi/session/session.ts";
 import { FileSessionAdapter } from "./xapi/session/adapter.ts";
 import { SessionContextInterface } from "./xapi/session/session.ts";
 import { InMemorySessionAdapter } from "./xapi/session/adapter.ts";
-import BodyParser from "./xapi/bodyparser/bodyparser.ts";
+import BodyParser from "./xapi/parser/bodyparser.ts";
 const app = new Application();
 
 const usersRouter = new Router();
@@ -27,8 +27,8 @@ usersRouter.get("/new", (ctx: HttpContext, next: Function) => {
   (ctx as SessionContextInterface).session?.set("acmy", "2021");
   ctx.response.send("users new router");
 });
-usersRouter.get("/new/more", (ctx: HttpContext, next: Function) => {
-  ctx.response.send("users/new/more route");
+usersRouter.get("/:id/more", (ctx: HttpContext, next: Function) => {
+  ctx.response.send(ctx.request.params.id);
 });
 usersRouter.get("/delete", (ctx: HttpContext, next: Function) => {
   ctx.response.send("users/delete route");
