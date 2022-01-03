@@ -24,6 +24,21 @@ router.post("/new", function (ctx: HttpContextInterface, next: Function) {
 });
 
 ```
+
+Route params and regular expressions are supported 
+Router implements router interface which overloads get, post, put, patch, delete and use methods. Check interface for api. 
+```ts
+import { Router } from "../../../xapi/router/router.ts";
+import { HttpContextInterface } from "../../../xapi/http/http.lib.ts";
+const router = new Router();
+
+router.get("/:id(\\d)", function (ctx: HttpContextInterface, next: Function) {
+ const id = ctx.request.params.id;
+ // call  next() for the next middleware 
+});
+
+```
+
 check the RouterInterface for more information on what router class methods offers (https://github.com/nikolinmajmari/xapi/blob/main/xapi/router/router.ts)
 
 # Adapters 
