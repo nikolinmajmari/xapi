@@ -1,12 +1,7 @@
-import { HttpContext } from "../http/http.lib.ts";
-import {
-  Cookie,
-  getCookies,
-  setCookie,
-} from "https://deno.land/std@0.105.0/http/cookie.ts";
+import { HttpContext, HttpContextInterface } from "../http/http.lib.ts";
+import { getCookies, HttpCookie, setCookie } from "./cookie.ts";
 
 const SESSION_ID_KEY = "xapi_session_id";
-import { HttpCookie } from "./cookie.ts";
 import { ServerRequest } from "https://deno.land/std@0.105.0/http/server.ts";
 import { SessionAdapterInterface } from "./adapter.ts";
 
@@ -16,7 +11,7 @@ var generator = (old = null) => {
   return "_" + Math.random().toString(36).substr(2, 36);
 };
 
-export interface SessionContextInterface {
+export interface SessionContextInterface extends HttpContextInterface {
   session?: RequestSession;
 }
 
@@ -28,12 +23,12 @@ class SessionContext extends HttpContext implements SessionContextInterface {
     session = new Session<T>(params);
     return (ctx: SessionContext, next: Function) => {
       let sessionId = null;
-      let cookies = getCookies((ctx as HttpContext).request.serverRequest);
+      let cookies = getCookies((ctx as HttpContext).request);
       sessionId = cookies.secret;
       if (sessionId == undefined || session == null) {
         sessionId = generator();
         let cookie: HttpCookie = new HttpCookie("secret", sessionId);
-        setCookie(ctx.response, cookie);
+        setCookie((ctx as HttpContextInterface).response, cookie);
       }
       ctx.session = new RequestSession(sessionId);
       next();
@@ -68,6 +63,9 @@ class RequestSession implements SessionInterface {
   }
   set(key: string, value: string): void {
     return session.set(this.sessionId + key, value);
+  }
+  getSessionId() {
+    return this.sessionId;
   }
 }
 

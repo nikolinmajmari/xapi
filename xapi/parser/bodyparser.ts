@@ -1,38 +1,40 @@
 import { HttpContext } from "../http/http.lib.ts";
-import { ServerRequest } from "https://deno.land/std/http/server.ts";
-import { StringReader } from "https://deno.land/std@0.105.0/io/mod.ts";
-import { Request } from "../http/http.lib.ts";
+import { HttpRequest } from "../http/http.lib.ts";
 
-const reader = new StringReader("");
 
 export default async function BodyParser(ctx: HttpContext, next: Function) {
-  const request: Request = ctx.request;
+  const request: HttpRequest = ctx.request;
   if (
     request.headers.get("content-type") == "application/x-www-form-urlencoded"
   ) {
     const data = await formParser(request);
-    (ctx.request as Request).body = data;
+    (ctx.request as HttpRequest).body = data;
   } else if (
     request.headers.get("content-type") == "application/json"
   ) {
-    const data = await Deno.readAll(request.body as Deno.Reader);
-    const jsonString = new TextDecoder().decode(data);
-    console.log(jsonString);
+    const reader = request.requestEvent.request.body?.getReader();
+    const data = await reader?.read();
+    const value = data?.value;
+    const jsonString = new TextDecoder().decode(value);
     if (jsonString != null && jsonString != "") {
-      request.body = JSON.parse(new TextDecoder().decode(data));
+      request.body = JSON.parse(new TextDecoder().decode(value));
+      
     }
   } else {
-    request.body = new TextDecoder().decode(
-      await Deno.readAll(request.body as Deno.Reader),
-    );
+    const reader = request.requestEvent.request.body?.getReader();
+    const data = await reader?.read();
+    const value = data?.value;
+    request.body = value??null;
     console.log("Unsupported form data type");
   }
   next();
 }
 
-async function formParser(request: Request): Promise<any> {
-  const data = await Deno.readAll(request.body as Deno.Reader);
-  const stringData = new TextDecoder().decode(data);
+async function formParser(request: HttpRequest): Promise<any> {
+  const reader = request.requestEvent.request.body?.getReader();
+  const data = await reader?.read();
+  const value = data?.value;
+  const stringData = new TextDecoder().decode(value);
   const parsed: { [key: string]: any } = {};
   stringData.split("&").forEach(function (value: string, index: number) {
     let chunks = value.split("=");

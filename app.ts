@@ -76,7 +76,7 @@ docsRouter.use((ctx: HttpContext, next: Function) => {
   next();
 });
 
-app.use(BodyParser);
+//app.use(BodyParser);
 app.use(
   Session<InMemorySessionAdapter>({
     secret: "secret",
@@ -88,6 +88,7 @@ app.use((ctx: HttpContext, next: Function) => {
   next();
 });
 app.use((ctx: HttpContext, next: Function) => {
+  console.log(ctx.request.url);
   console.log(
     "getting 2021 on session as ",
     (ctx as SessionContextInterface).session?.get("acmy"),
@@ -105,4 +106,4 @@ app.get("/forms", (ctx: HttpContext, next: Function) => {
   ctx.response.send("this is /forms path");
 });
 
-app.listen();
+app.listen(8080);

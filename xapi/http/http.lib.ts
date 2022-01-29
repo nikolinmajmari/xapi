@@ -1,5 +1,3 @@
-import { ServerRequest } from "https://deno.land/std/http/server.ts";
-
 export enum HttpMethod {
   GET = "GET",
   POST = "POST",
@@ -10,45 +8,53 @@ export enum HttpMethod {
 }
 
 export interface HttpContextInterface {
-  request: Request;
-  response: Response;
+  request: HttpRequest;
+  response: HttpResponse;
 }
 
 export class HttpContext implements HttpContextInterface {
-  readonly request: Request;
-  readonly response: Response;
-  constructor(request: ServerRequest) {
-    this.request = new Request(request);
-    this.response = new Response(request);
+  readonly request: HttpRequest;
+  readonly response: HttpResponse;
+  constructor(requestEvent:Deno.RequestEvent) {
+    this.request = new HttpRequest(requestEvent);
+    this.response = new HttpResponse(requestEvent);
+  }
+
+
+  static fromRequestEvent(event:Deno.RequestEvent):HttpContext{
+    return new HttpContext(event)
   }
 }
 
-export class Response {
-  private readonly request: ServerRequest;
+export class HttpResponse {
+  private readonly event: Deno.RequestEvent;
 
   headers: Headers;
-  constructor(request: ServerRequest) {
-    this.request = request;
+  constructor(event: Deno.RequestEvent) {
+    this.event = event;
     this.headers = new Headers();
   }
   send(content: string) {
-    this.request.respond({ headers: this.headers, body: content });
+    this.event.respondWith(new Response(content,{headers:this.headers,status:200}));
+  }
+  json(content:{}){
+    this.event.respondWith(new Response(JSON.stringify(content),{headers:this.headers,status:200}));
   }
 }
 
-export class Request {
-  body: string | Deno.Reader | undefined | { [key: string]: any } = undefined;
+export class HttpRequest {
+  body: string | Uint8Array | null | { [key: string]: any } = null;
   headers: Headers;
   params: { [key: string]: any } = {};
   query: { [key: string]: any } = {};
-  readonly serverRequest: ServerRequest;
+  readonly requestEvent: Deno.RequestEvent;
   url: string;
   method: string;
-  constructor(request: ServerRequest) {
-    this.serverRequest = request;
-    this.body = request.body;
-    this.method = request.method;
-    this.url = request.url;
-    this.headers = request.headers;
+  constructor(event: Deno.RequestEvent) {
+    this.requestEvent = event;
+    this.body = event.request.body;
+    this.method = event.request.method;
+    this.url = event.request.url.replace("http://localhost:8080","");
+    this.headers = event.request.headers;
   }
 }

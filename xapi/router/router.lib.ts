@@ -1,4 +1,3 @@
-import { ServerRequest } from "https://deno.land/std/http/server.ts";
 import { HttpContextInterface, HttpMethod } from "../http/http.lib.ts";
 
 /**
@@ -650,9 +649,9 @@ class WhereIterator<T> {
  * helper class for parsing params
  */
 export class ParamParser {
-  partition: String;
+  partition: string;
 
-  constructor(partition: String) {
+  constructor(partition: string) {
     this.partition = partition;
   }
   isParam() {

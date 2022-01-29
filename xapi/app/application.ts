@@ -1,8 +1,6 @@
-import { serve, ServerRequest } from "https://deno.land/std/http/server.ts";
 import { Router } from "../framework.ts";
 import { RoutingContextHandlerAdapter } from "../router/router.ts";
-import { Request } from "../http/http.lib.ts";
-import { HttpContext, HttpContextInterface } from "../http/http.lib.ts";
+import { HttpContext } from "../http/http.lib.ts";
 import QueryParser from "../parser/queryparser.ts";
 
 export default class Application extends Router {
@@ -26,12 +24,15 @@ export default class Application extends Router {
 
   async listen(port?: number): Promise<void> {
     this._closeChain();
-    const server = serve({ port: port ?? 8080 });
+    const server = Deno.listen({ port: 8080 });
     console.log(
-      `HTTP webserver running.  Access it at:  http://localhost:8080/`,
+      `HTTP webserver running.  Access it at:  http://localhost:${port}/`,
     );
-    for await (const request of server) {
-      this.handler.handle(new HttpContext(request));
+    for await (const conn of server) {
+      const httpConn = Deno.serveHttp(conn);
+      for await (const requestEvent of httpConn) {
+        this.handler.handle(new HttpContext(requestEvent)); 
+      }
     }
   }
 }

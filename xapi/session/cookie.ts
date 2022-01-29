@@ -1,6 +1,10 @@
-import { Cookie } from "https://deno.land/std@0.105.0/http/cookie.ts";
-
-export class HttpCookie implements Cookie {
+import {
+  Cookie as cookie,
+  getCookies as getcookies,
+  setCookie as setcookie,
+} from "https://deno.land/std@0.105.0/http/cookie.ts";
+import { HttpRequest, HttpResponse } from "../http/http.lib.ts";
+export class HttpCookie implements cookie {
   name: string;
   /** Value of the cookie. */
   value: string;
@@ -25,4 +29,12 @@ export class HttpCookie implements Cookie {
     this.name = name;
     this.value = value;
   }
+}
+
+export function getCookies(request: HttpRequest) {
+  return getcookies(request.requestEvent.request);
+}
+
+export function setCookie(response: HttpResponse, cookie: HttpCookie) {
+  return setcookie(response, cookie);
 }

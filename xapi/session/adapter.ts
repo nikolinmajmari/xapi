@@ -1,17 +1,20 @@
 export interface SessionAdapterInterface {
   load(key: string): string | null;
   store(key: string, value: string): void;
-  loadMany(key: string[]): Map<string, string>;
-  storeMany(values: Map<string, string>): void;
+  load(sessionid: string, key: string): string | null;
+  store(sessionid: string, key: string): void;
+  loadMany(sessionid: string): Map<string, string> | undefined;
+  storeMany(sessionid: string, data: Map<string, string>): void;
 }
 
 export class FileSessionAdapter implements SessionAdapterInterface {
-  loadMany(key: string[]): Map<string, string> {
+  loadMany(sessionid: string): Map<string, string> {
     throw new Error("Method not implemented.");
   }
-  storeMany(values: Map<string, string>): void {
+  storeMany(sessionid: string, data: Map<string, string>): void {
     throw new Error("Method not implemented.");
   }
+
   load(key: string): string {
     throw new Error("Method not implemented.");
   }
@@ -21,6 +24,12 @@ export class FileSessionAdapter implements SessionAdapterInterface {
 }
 
 export class InMemorySessionAdapter implements SessionAdapterInterface {
+  loadMany(sessionid: string): Map<string, string> {
+    throw new Error("Method not implemented.");
+  }
+  storeMany(sessionid: string, data: Map<string, string>): void {
+    throw new Error("Method not implemented.");
+  }
   private sessionData: Map<string, string> = new Map();
   load(key: string): string | null {
     let data = this.sessionData.get(key);
@@ -31,11 +40,5 @@ export class InMemorySessionAdapter implements SessionAdapterInterface {
   }
   store(key: string, value: string): void {
     this.sessionData.set(key, value);
-  }
-  loadMany(key: string[]): Map<string, string> {
-    throw new Error("Method not implemented.");
-  }
-  storeMany(values: Map<string, string>): void {
-    throw new Error("Method not implemented.");
   }
 }
