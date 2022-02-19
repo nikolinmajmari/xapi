@@ -4,8 +4,8 @@ import { HttpContextInterface, HttpMethod } from "../http/http.lib.ts";
  * defines how context is handled by router
  */
 export interface ContextHandlerInterface<T extends HttpContextInterface> {
-  handle(context: HttpContextInterface): void;
-  setSuccessor(successor: ContextHandlerInterface<HttpContextInterface>): void;
+  handle(context: T):void;
+  setSuccessor(successor: ContextHandlerInterface<T>): void;
 }
 
 /**

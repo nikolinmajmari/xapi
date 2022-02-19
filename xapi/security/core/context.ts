@@ -6,7 +6,7 @@ import { UserTokenInterface } from "./token.ts";
  * SecurityContextInterface,holds shared object accros middleware to authenticate a user request
  */
 export interface SecurityContextInterface extends HttpContextInterface{
-    security:SecurityCoreInterface;
+    security?:SecurityCoreInterface;
 }
 
 export interface SecurityCoreInterface{

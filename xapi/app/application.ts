@@ -24,7 +24,7 @@ export default class Application extends Router {
 
   async listen(port?: number): Promise<void> {
     this._closeChain();
-    const server = Deno.listen({ port: 8080 });
+    const server = Deno.listen({ port: port??8000 });
     console.log(
       `HTTP webserver running.  Access it at:  http://localhost:${port}/`,
     );

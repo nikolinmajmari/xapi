@@ -1,16 +1,27 @@
 import Application from "../../xapi/app/application.ts";
 import { HttpContextInterface } from "../../xapi/http/http.lib.ts";
-import Authentication from "../../xapi/auth/authentication.ts";
-import createSession from "../../xapi/session/session.ts";
-import { InMemorySessionAdapter } from "../../xapi/session/adapter.ts";
+import { BearerExtractor } from "../../xapi/security/authenticator/api_token_security.ts";
+import SecurityMiddlewareFactory from "../../xapi/security/authenticator/factory.ts";
+import { Authenticable } from "../../xapi/security/core/authenticable.ts";
 const app = new Application();
-const manager = Authentication.sessionStrategy({ key: "session_main" });
-app.use(createSession<InMemorySessionAdapter>({
-  secret: "secret",
-  adapter: new InMemorySessionAdapter(),
-  lifetime: 2000,
+
+app.use(SecurityMiddlewareFactory.createApiAuthenticator({
+  credentialsExtractor:(req)=>{
+    console.log("extracting header bearer");
+    return "bearer";
+  },
+  tokenValidator:(token)=>{
+    console.log("validating recived "+token);
+    console.log("returning as object { token:"+token+"}");
+    return {token:token??""};
+  },
+  userLoader:(credentials)=>{
+    console.log("recived credentials ",credentials);
+    console.log("returning user");
+    return {username:"papa"} as Authenticable;
+  
+  }
 }));
-app.use(manager.middleware());
 app.use((ctx: HttpContextInterface, next: Function) => {
   console.log("middleware called", ctx.request.url);
   next();

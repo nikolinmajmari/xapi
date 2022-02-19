@@ -1,3 +1,4 @@
+// deno-lint-ignore-file
 import { HttpContextInterface } from "../../http/http.lib.ts";
 import { Authenticable } from "../core/authenticable.ts";
 import { SecurityContextInterface } from "../core/context.ts";
@@ -13,10 +14,10 @@ export interface ApiAuthenticatorArguments<T extends Authenticable=Authenticable
 
 
 export default  class SecurityMiddlewareFactory{
-    static createApiAuthenticator<T extends Authenticable=Authenticable>(
-        params:ApiAuthenticatorArguments<T>
-    ):SecurityMidlewareHandler{
+    static createApiAuthenticator<T extends Authenticable=Authenticable>(params:ApiAuthenticatorArguments<T>):SecurityMidlewareHandler{
         return (ctx:HttpContextInterface,next:Function)=>{
+            (ctx as SecurityContextInterface).security = new ApiTokenSecurity<T>("main");
+            console.log("hey authenticating");
             try{
                 let credentials:string|undefined;
                 let validated:JsonObject|undefined;
@@ -31,12 +32,34 @@ export default  class SecurityMiddlewareFactory{
                     validated = (params.tokenValidator as CredentialsValidatorFunction)(credentials);
                 }
                 const user = params.userLoader(validated);
-                (ctx as SecurityContextInterface).security = new ApiTokenSecurity<T>("main");
-                (ctx as SecurityContextInterface).security.authenticate(user,["user"]);
-                next();
+                (ctx as SecurityContextInterface).security?.authenticate(user,["user"]);
             }catch(e){
-                next();
             }
+            next();
+        }
+    }
+
+
+    static createSessionAuthenticator<T extends Authenticable=Authenticable>(params:{
+
+    }):SecurityMidlewareHandler{
+        return (ctx:HttpContextInterface,next:Function)=>{
+            // check if session is enabled if not throw an warning 
+
+            // get parsed token from session 
+            
+            // parse back to json 
+            
+            // reload user 
+            
+            // check user and token user 
+            
+            // authenticate user 
+            
+            // save token in session storage 
         }
     }
 }
+
+
+

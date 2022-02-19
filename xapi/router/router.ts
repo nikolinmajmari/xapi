@@ -1,64 +1,109 @@
+// deno-lint-ignore-file
 import { HttpContextInterface } from "../http/http.lib.ts";
 import { HttpMethod } from "../http/http.lib.ts";
 import { ContextHandlerInterface } from "./router.lib.ts";
 import { LayerHandler } from "./router.lib.ts";
 
+
+/**
+ * base class that defines how middleware functions should be defined and called
+ * implments context handler interface so this wrapper can be used by router
+ * override handle function to get a custom functionality
+ * create a router class that extends the new Adapter and you get your custom routing
+ * default api forces middleware functiosn of type
+ *  function (ctx:HttpContextInterface,next:Function){
+ *      // your
+ *      // code
+ *      // here
+ *  }
+ * but you can extend this class and override handle method for a custom functionality
+ */
+
+export interface RoutingContextHandlerAdapterInterface<F extends Function=Function> 
+        extends ContextHandlerInterface<HttpContextInterface> {
+
+}
+
+
+ export class RoutingContextHandlerAdapter<F extends Function = Function>
+ implements RoutingContextHandlerAdapterInterface<F>{
+ protected successor?: ContextHandlerInterface<HttpContextInterface>;
+ protected handler: F;
+ constructor(handler: F) {
+   this.handler = handler;
+ }
+
+ handle(context: HttpContextInterface): void {
+   this.handler(context, () => this.invokeSuccessor(context));
+ }
+ setSuccessor(successor: ContextHandlerInterface<HttpContextInterface>): void {
+   this.successor = successor;
+ }
+ invokeSuccessor(context: HttpContextInterface) {
+   if (this.successor) {
+     this.successor.handle(context);
+   }
+ }
+}
+
+
+
+
 interface RouterInterface<
-  T extends ContextHandlerInterface<HttpContextInterface>,
-> {
-  get(handler: Router<T> | Function): void;
+  T extends RoutingContextHandlerAdapterInterface<F>,F extends Function=Function>{
+  get(handler: Router<T> | F): void;
   get(
     path: string | string[],
-    handler: Router<T> | Function,
+    handler: Router<T> | F,
   ): void;
   get(
     path: string | string[],
-    handler: (Router<T> | Function)[],
+    handler: (Router<T> | F)[],
   ): void;
-  post(handler: Router<T> | Function): void;
+  post(handler: Router<T> | F): void;
   post(
     path: string | string[],
-    handler: Router<T> | Function,
+    handler: Router<T> | F,
   ): void;
   post(
     path: string | string[],
-    handler: (Router<T> | Function)[],
+    handler: (Router<T> | F)[],
   ): void;
-  put(handler: Router<T> | Function): void;
+  put(handler: Router<T> | F): void;
   put(
     path: string | string[],
-    handler: Router<T> | Function,
+    handler: Router<T> | F,
   ): void;
   put(
     path: string | string[],
-    handler: (Router<T> | Function)[],
+    handler: (Router<T> | F)[],
   ): void;
-  patch(handler: Router<T> | Function): void;
+  patch(handler: Router<T> | F): void;
   patch(
     path: string | string[],
-    handler: Router<T> | Function,
+    handler: Router<T> | F,
   ): void;
   patch(
     path: string | string[],
-    handler: (Router<T> | Function)[],
+    handler: (Router<T> | F)[],
   ): void;
-  delete(handler: Router<T> | Function): void;
+  delete(handler: Router<T> | F): void;
   delete(
     path: string | string[],
-    handler: Router<T> | Function,
+    handler: Router<T> | F,
   ): void;
   delete(
     path: string | string[],
-    handler: (Router<T> | Function)[],
+    handler: (Router<T> | F)[],
   ): void;
-  use(handler: Router<T> | Function): void;
+  use(handler: Router<T> | F): void;
   use(
     path: string | string[],
-    handler: Router<T> | Function,
+    handler: Router<T> | F,
   ): void;
   use(
     path: string | string[],
-    handler: (Router<T> | Function)[],
+    handler: (Router<T> | F)[],
   ): void;
 }
 
@@ -67,40 +112,40 @@ interface RouterInterface<
  * accepts as param an RoutingContextHandlerAdapter which implements ContextHandlerInterface this
  * class defines how context is handled by middleware function
  */
-export class Router<T extends ContextHandlerInterface<HttpContextInterface>>
-  implements RouterInterface<T> {
+export class Router<T extends RoutingContextHandlerAdapterInterface<F>,F extends Function=Function>
+  implements RouterInterface<T,F> {
   protected handler: LayerHandler = new LayerHandler();
-  get(handler: Router<T> | Function): void;
+  get(handler: Router<T> | F): void;
   get(
     path: string | string[],
-    handler: Function | Router<T>,
+    handler: F | Router<T>,
   ): void;
   get(
     path: string | string[],
-    handler: (Function | Router<T>)[],
+    handler: (F | Router<T>)[],
   ): void;
   get(
     ...params: (
       | string
       | string[]
-      | Function
+      | F
       | Router<T>
-      | (Function | Router<T>)[]
+      | (F | Router<T>)[]
     )[]
   ): void {
     if (params.length == 1) {
-      this.attach(params[0] as (Function | Router<T>), HttpMethod.GET);
+      this.attach(params[0] as (F | Router<T>), HttpMethod.GET);
     } else if (params.length == 2) {
       if (params[1] instanceof Function || params[1] instanceof Router) {
         this.attach(
           params[0] as string | string[],
-          params[1] as Router<T> | Function,
+          params[1] as Router<T> | F,
           HttpMethod.GET,
         );
       } else {
         this.attach(
           params[0] as string | string[],
-          params[1] as (Router<T> | Function)[],
+          params[1] as (Router<T> | F)[],
           HttpMethod.GET,
         );
       }
@@ -108,26 +153,26 @@ export class Router<T extends ContextHandlerInterface<HttpContextInterface>>
       throw `invalid arguments, only one or two allowed`;
     }
   }
-  post(handler: Function | Router<T>): void;
-  post(path: string | string[], handler: Function | Router<T>): void;
-  post(path: string | string[], handler: (Function | Router<T>)[]): void;
+  post(handler: F | Router<T>): void;
+  post(path: string | string[], handler: F | Router<T>): void;
+  post(path: string | string[], handler: (F | Router<T>)[]): void;
   post(
     ...params:
-      (string | string[] | Function | Router<T> | (Function | Router<T>)[])[]
+      (string | string[] | F | Router<T> | (F | Router<T>)[])[]
   ): void {
     if (params.length == 1) {
-      this.attach(params[0] as (Function | Router<T>), HttpMethod.POST);
+      this.attach(params[0] as (F | Router<T>), HttpMethod.POST);
     } else if (params.length == 2) {
       if (params[1] instanceof Function || params[1] instanceof Router) {
         this.attach(
           params[0] as string | string[],
-          params[1] as Router<T> | Function,
+          params[1] as Router<T> | F,
           HttpMethod.POST,
         );
       } else {
         this.attach(
           params[0] as string | string[],
-          params[1] as (Router<T> | Function)[],
+          params[1] as (Router<T> | F)[],
           HttpMethod.POST,
         );
       }
@@ -135,26 +180,26 @@ export class Router<T extends ContextHandlerInterface<HttpContextInterface>>
       throw `invalid arguments, only one or two allowed`;
     }
   }
-  put(handler: Function | Router<T>): void;
-  put(path: string | string[], handler: Function | Router<T>): void;
-  put(path: string | string[], handler: (Function | Router<T>)[]): void;
+  put(handler: F | Router<T>): void;
+  put(path: string | string[], handler: F | Router<T>): void;
+  put(path: string | string[], handler: (F | Router<T>)[]): void;
   put(
     ...params:
-      (string | string[] | Function | Router<T> | (Function | Router<T>)[])[]
+      (string | string[] | F | Router<T> | (F | Router<T>)[])[]
   ): void {
     if (params.length == 1) {
-      this.attach(params[0] as (Function | Router<T>), HttpMethod.PUT);
+      this.attach(params[0] as (F | Router<T>), HttpMethod.PUT);
     } else if (params.length == 2) {
       if (params[1] instanceof Function || params[1] instanceof Router) {
         this.attach(
           params[0] as string | string[],
-          params[1] as Router<T> | Function,
+          params[1] as Router<T> | F,
           HttpMethod.PUT,
         );
       } else {
         this.attach(
           params[0] as string | string[],
-          params[1] as (Router<T> | Function)[],
+          params[1] as (Router<T> | F)[],
           HttpMethod.PUT,
         );
       }
@@ -162,26 +207,26 @@ export class Router<T extends ContextHandlerInterface<HttpContextInterface>>
       throw `invalid arguments, only one or two allowed`;
     }
   }
-  patch(handler: Function | Router<T>): void;
-  patch(path: string | string[], handler: Function | Router<T>): void;
-  patch(path: string | string[], handler: (Function | Router<T>)[]): void;
+  patch(handler: F | Router<T>): void;
+  patch(path: string | string[], handler: F | Router<T>): void;
+  patch(path: string | string[], handler: (F | Router<T>)[]): void;
   patch(
     ...params:
-      (string | string[] | Function | Router<T> | (Function | Router<T>)[])[]
+      (string | string[] | F | Router<T> | (F | Router<T>)[])[]
   ): void {
     if (params.length == 1) {
-      this.attach(params[0] as (Function | Router<T>), HttpMethod.PATCH);
+      this.attach(params[0] as (F | Router<T>), HttpMethod.PATCH);
     } else if (params.length == 2) {
       if (params[1] instanceof Function || params[1] instanceof Router) {
         this.attach(
           params[0] as string | string[],
-          params[1] as Router<T> | Function,
+          params[1] as Router<T> | F,
           HttpMethod.PATCH,
         );
       } else {
         this.attach(
           params[0] as string | string[],
-          params[1] as (Router<T> | Function)[],
+          params[1] as (Router<T> | F)[],
           HttpMethod.PATCH,
         );
       }
@@ -189,26 +234,26 @@ export class Router<T extends ContextHandlerInterface<HttpContextInterface>>
       throw `invalid arguments, only one or two allowed`;
     }
   }
-  delete(handler: Function | Router<T>): void;
-  delete(path: string | string[], handler: Function | Router<T>): void;
-  delete(path: string | string[], handler: (Function | Router<T>)[]): void;
+  delete(handler: F | Router<T>): void;
+  delete(path: string | string[], handler: F | Router<T>): void;
+  delete(path: string | string[], handler: (F | Router<T>)[]): void;
   delete(
     ...params:
-      (string | string[] | Function | Router<T> | (Function | Router<T>)[])[]
+      (string | string[] | F | Router<T> | (F | Router<T>)[])[]
   ): void {
     if (params.length == 1) {
-      this.attach(params[0] as (Function | Router<T>), HttpMethod.DELETE);
+      this.attach(params[0] as (F | Router<T>), HttpMethod.DELETE);
     } else if (params.length == 2) {
       if (params[1] instanceof Function || params[1] instanceof Router) {
         this.attach(
           params[0] as string | string[],
-          params[1] as Router<T> | Function,
+          params[1] as Router<T> | F,
           HttpMethod.DELETE,
         );
       } else {
         this.attach(
           params[0] as string | string[],
-          params[1] as (Router<T> | Function)[],
+          params[1] as (Router<T> | F)[],
           HttpMethod.DELETE,
         );
       }
@@ -216,26 +261,26 @@ export class Router<T extends ContextHandlerInterface<HttpContextInterface>>
       throw `invalid arguments, only one or two allowed`;
     }
   }
-  use(handler: Function | Router<T>): void;
-  use(path: string | string[], handler: Function | Router<T>): void;
-  use(path: string | string[], handler: (Function | Router<T>)[]): void;
+  use(handler: F | Router<T>): void;
+  use(path: string | string[], handler: F | Router<T>): void;
+  use(path: string | string[], handler: (F | Router<T>)[]): void;
   use(
     ...params:
-      (string | string[] | Function | Router<T> | (Function | Router<T>)[])[]
+      (string | string[] | F | Router<T> | (F | Router<T>)[])[]
   ): void {
     if (params.length == 1) {
-      this.attach(params[0] as (Function | Router<T>), HttpMethod.ALL);
+      this.attach(params[0] as (F | Router<T>), HttpMethod.ALL);
     } else if (params.length == 2) {
       if (params[1] instanceof Function || params[1] instanceof Router) {
         this.attach(
           params[0] as string | string[],
-          params[1] as Router<T> | Function,
+          params[1] as Router<T> | F,
           HttpMethod.ALL,
         );
       } else {
         this.attach(
           params[0] as string | string[],
-          params[1] as (Router<T> | Function)[],
+          params[1] as (Router<T> | F)[],
           HttpMethod.ALL,
         );
       }
@@ -245,26 +290,26 @@ export class Router<T extends ContextHandlerInterface<HttpContextInterface>>
   }
 
   private attach(
-    handler: Function | Router<T>,
+    handler: F | Router<T>,
     method: HttpMethod,
   ): void;
   private attach(
     path: string | string[],
-    handler: Function | Router<T>,
+    handler: F | Router<T>,
     method: HttpMethod,
   ): void;
   private attach(
     path: string | string[],
-    handler: (Function | Router<T>)[],
+    handler: (F | Router<T>)[],
     method: HttpMethod,
   ): void;
   private attach(
     ...params: (
       | string
       | string[]
-      | Function
+      | F
       | Router<T>
-      | (Function | Router<T>)[]
+      | (F | Router<T>)[]
       | HttpMethod
     )[]
   ) {
@@ -276,9 +321,9 @@ export class Router<T extends ContextHandlerInterface<HttpContextInterface>>
           params[1] as HttpMethod,
         );
       } else if (Array.isArray(params[0])) {
-        (params[0] as (Router<T> | Function)[]).forEach(
+        (params[0] as (Router<T> | F)[]).forEach(
           (
-            item: Function | Router<T>,
+            item: F | Router<T>,
             index: number,
           ) => {
             if (item instanceof Router) {
@@ -317,9 +362,9 @@ export class Router<T extends ContextHandlerInterface<HttpContextInterface>>
         (params[0] instanceof String || typeof params[0] == "string") &&
         Array.isArray(params[1])
       ) {
-        (params[1] as (Router<T> | Function)[]).forEach(
+        (params[1] as (Router<T> | F)[]).forEach(
           (
-            item: (Function | Router<T>),
+            item: (F | Router<T>),
             index: number,
           ) => {
             if (item instanceof Router) {
@@ -354,10 +399,10 @@ export class Router<T extends ContextHandlerInterface<HttpContextInterface>>
           });
         } else if (Array.isArray(params[1])) {
           (params[0] as string[]).forEach((path: string, index: number) => {
-            (params[1] as (Function | Router<T>)[])
+            (params[1] as (F | Router<T>)[])
               .forEach(
                 (
-                  item: Function | Router<T>,
+                  item: F | Router<T>,
                   index: number,
                 ) => {
                   if (item instanceof Router) {
@@ -408,40 +453,6 @@ export class Router<T extends ContextHandlerInterface<HttpContextInterface>>
       }
     } else {
       throw `invalid arguments, only one or two allowed`;
-    }
-  }
-}
-
-/**
- * base class that defines how middleware functions should be defined and called
- * implments context handler interface so this wrapper can be used by router
- * override handle function to get a custom functionality
- * create a router class that extends the new Adapter and you get your custom routing
- * default api forces middleware functiosn of type
- *  function (ctx:HttpContextInterface,next:Function){
- *      // your
- *      // code
- *      // here
- *  }
- * but you can extend this class and override handle method for a custom functionality
- */
-export class RoutingContextHandlerAdapter
-  implements ContextHandlerInterface<HttpContextInterface> {
-  protected successor?: ContextHandlerInterface<HttpContextInterface>;
-  protected handler: Function;
-  constructor(handler: Function) {
-    this.handler = handler;
-  }
-
-  handle(context: HttpContextInterface): void {
-    this.handler(context, () => this.invokeSuccessor(context));
-  }
-  setSuccessor(successor: ContextHandlerInterface<HttpContextInterface>): void {
-    this.successor = successor;
-  }
-  invokeSuccessor(context: HttpContextInterface) {
-    if (this.successor) {
-      this.successor.handle(context);
     }
   }
 }
