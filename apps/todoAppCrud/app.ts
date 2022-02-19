@@ -13,7 +13,7 @@ import { HttpContextInterface } from "../../xapi/http/http.lib.ts";
 const app = new Application();
 
 app.use(BodyParser);
-app.get("/", (ctx: HttpContextInterface, next: Function) => {
+app.get((ctx: HttpContextInterface, next: Function) => {
   ctx.response.send("this is index");
 });
 app.use("/notes", notesRouter);
