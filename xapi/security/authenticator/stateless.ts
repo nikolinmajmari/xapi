@@ -1,7 +1,7 @@
 import { HttpRequest } from "../../http/http.lib.ts";
-import { AuthenticableInterface } from "../core/authenticable.ts";
+import { Authenticable, AuthenticableInterface } from "../core/authenticable.ts";
 import { UserSecurityCoreInterface } from "../core/context.ts";
-import { CredentialsExtractor } from "../core/credentials.ts";
+import { CredentialsExtractor, CredentialsExtractorFunction, CredentialsExtractorInterface, CredentialsValidatiorInterface, CredentialsValidatorFunction, UserLoader } from "../core/credentials.ts";
 import { UserToken, UserTokenInterface } from "../core/token.ts";
 
 
@@ -18,7 +18,7 @@ export class BearerExtractor extends CredentialsExtractor{
     }  
 }
 
-export class ApiTokenSecurity<T extends AuthenticableInterface> implements UserSecurityCoreInterface<T>{
+export class StatelessAuth<T extends AuthenticableInterface> implements UserSecurityCoreInterface<T>{
     #token?:UserTokenInterface<T>;
     #context:string="main";
 
@@ -42,4 +42,10 @@ export class ApiTokenSecurity<T extends AuthenticableInterface> implements UserS
           context:this.#context
       })
     }    
+}
+
+export interface ApiAuthenticatorArguments<T extends Authenticable=Authenticable>{
+    credentialsExtractor:CredentialsExtractorInterface|CredentialsExtractorFunction,
+    tokenValidator:CredentialsValidatiorInterface|CredentialsValidatorFunction,
+    userLoader: UserLoader<T>;
 }

@@ -54,7 +54,7 @@ export class HttpRequest {
     this.requestEvent = event;
     this.body = event.request.body;
     this.method = event.request.method;
-    this.url = event.request.url.replace("http://localhost:8080","");
+    this.url = event.request.url.replace("http://localhost:9000","");
     this.headers = event.request.headers;
   }
 }

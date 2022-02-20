@@ -17,7 +17,7 @@ export interface SessionContextInterface extends HttpContextInterface {
 
 class SessionContext extends HttpContext implements SessionContextInterface {
   session?: RequestSession;
-  static createSession<T extends SessionAdapterInterface>(
+  static createSession<T extends SessionAdapterInterface=SessionAdapterInterface>(
     params: { secret: string; adapter: T; lifetime: number },
   ) {
     session = new Session<T>(params);
