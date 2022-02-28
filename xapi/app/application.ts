@@ -1,6 +1,9 @@
-import { Router } from "../framework.ts";
-import { RoutingContextHandlerAdapter } from "../router/router.ts";
-import { HttpContext } from "../http/http.lib.ts";
+import {
+  Router,
+  createRoutingContext,
+  ContextHandelerAdapter,
+} from "../framework.ts";
+import {HttpContext} from "../http/http.lib.ts";
 import QueryParser from "../parser/queryparser.ts";
 
 export default class Application extends Router {
@@ -13,25 +16,25 @@ export default class Application extends Router {
   _closeChain() {
     this.handler.setRoute();
     this.handler.setSuccessor(
-      new RoutingContextHandlerAdapter(
-        (ctx: HttpContext, next: Function) => {
-          console.log(ctx.request.body);
-          ctx.response.send("route not found");
-        },
-      ),
+      new ContextHandelerAdapter((ctx: HttpContext, next: Function) => {
+        console.log(ctx.request.body);
+        ctx.response.send("route not found");
+      })
     );
   }
 
   async listen(port?: number): Promise<void> {
     this._closeChain();
-    const server = Deno.listen({ port: port??8000 });
+    const server = Deno.listen({port: port ?? 8000});
     console.log(
-      `HTTP webserver running.  Access it at:  http://localhost:${port}/`,
+      `HTTP webserver running.  Access it at:  http://localhost:${port}/`
     );
     for await (const conn of server) {
       const httpConn = Deno.serveHttp(conn);
       for await (const requestEvent of httpConn) {
-        this.handler.handle(new HttpContext(requestEvent)); 
+        this.handler.handle(
+          createRoutingContext(new HttpContext(requestEvent))
+        );
       }
     }
   }

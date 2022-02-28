@@ -1,4 +1,4 @@
-import { HttpContextInterface } from "../../http/http.lib.ts";
+import { HttpContextInterface, HttpRequest } from "../../http/http.lib.ts";
 import { SessionContextInterface, SessionInterface } from "../../session/session.ts";
 import { Authenticable, AuthenticableInterface } from "../core/authenticable.ts";
 import { SecurityContextInterface, UserSecurityCoreInterface } from "../core/context.ts";
@@ -68,6 +68,40 @@ export default function sessionAuthenticator<T extends Authenticable=Authenticab
         next();
     }
 }
+
+export interface AuthenticateWithCredentialsOptionsInterface{
+    success:string,
+    failure:string,
+    challange:(req:HttpRequest)=>AuthenticableInterface|undefined;
+}
+
+/**
+ * 
+ *  app.post("/login/challange",authenticateWithCredentials({
+ *          success: "/dashboard",
+ *          failure: "/login",
+ *          challange: (req:HttpRequest)=>{
+ *              return User.find({username:req.body.username,password:Hash(req.body.password)});
+ *          }
+ *      }));
+ * 
+ * @param params 
+ * @returns 
+ */
+export  function authenticateWithCredentials<T extends Authenticable=Authenticable>(params:AuthenticateWithCredentialsOptionsInterface){
+    return (ctx:SecurityContextInterface,next:Function)=>{
+        if(ctx.security==undefined){
+            next();
+        }
+        const user = params.challange(ctx.request);
+        if(user!=undefined){
+            ctx.security?.authenticate(user);
+            ctx.response.send(params.success);
+        }else{
+            ctx.response.send(params.failure);
+        }
+    }
+};
 
 export function auth<T extends AuthenticableInterface=AuthenticableInterface>(ctx:HttpContextInterface){
     return ((ctx as SecurityContextInterface).security) as UserSecurityCoreInterface<T>;

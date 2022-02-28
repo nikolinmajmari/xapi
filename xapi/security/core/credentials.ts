@@ -6,13 +6,18 @@ export type UserLoader<T extends Authenticable> = (credentials:JsonObject)=>T;
 export type UserSerializer<T extends Authenticable> = (user:T)=>string;
 
 
+/**
+ * Extracts credentials from HttpRequest
+ */
 export type CredentialsExtractorFunction = (ctx:HttpRequest)=>string|undefined;
 export interface CredentialsExtractorInterface{
     extract(ctx:HttpRequest):string|undefined;
 }
 
+/**
+ * Validates credentials extracted from HttpRequest
+ */
 export type CredentialsValidatorFunction = (credentials:string|undefined)=>JsonObject;
-
 export interface CredentialsValidatiorInterface {
     validate(credentials:string|undefined):JsonObject;
 }

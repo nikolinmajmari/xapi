@@ -1,7 +1,7 @@
 import Application from "../../xapi/app/application.ts";
-import { HttpContextInterface } from "../../xapi/http/http.lib.ts";
+import {HttpContextInterface} from "../../xapi/http/http.lib.ts";
 import apiAuthenticator from "../../xapi/security/authenticator/api_authenticator.ts";
-import { Authenticable } from "../../xapi/security/core/authenticable.ts";
+import {Authenticable} from "../../xapi/security/core/authenticable.ts";
 const app = new Application();
 
 /**
@@ -27,15 +27,11 @@ app.use((ctx: HttpContextInterface, next: Function) => {
   console.log("middleware called", ctx.request.url);
   next();
 });
-import moviesRouter  from "./routes/movies.ts";
-app.use("/movies",moviesRouter);
-app.use((ctx,next)=>{
-  console.log(ctx.request.url);
-  next();
-})
+import moviesRouter from "./routes/movies.ts";
+app.use("/movies", moviesRouter);
 
 app.use((ctx: HttpContextInterface, _next: Function) => {
-  ctx.response.send("hey boss");
+  ctx.response.send("no route found for " + ctx.request.url);
 });
 
 app.listen(9000);
