@@ -8,15 +8,8 @@ import {LayerHandler} from "./layer_handeler.ts";
  */
 export class ChainedSuccessor implements ContextHandlerInterface {
   handle(context: RoutingContextInterface): void {
-    console.log(
-      context.method,
-      " and ",
-      this.layer?.getRoute()?.isStrictMatch(context.url.pathname),
-      this.methodSuccessors
-    );
     if (this.layer?.getRoute()?.isStrictMatch(context.url.pathname)) {
       const handeler = this.methodSuccessors.get(context.method);
-      console.log("hey from ", handeler);
       if (handeler != undefined) {
         return handeler.handle(context);
       }

@@ -24,9 +24,6 @@ export class ChainHandler implements ContextHandlerInterface {
     if (!this.routes.has(basePath)) {
       this.routes.set(basePath, new LayerHandler());
     }
-    console.log(
-      `[ChainHandler::use] basePath: ${basePath}  deepPath: ${deepPath} method: ${method}`
-    );
     (this.routes.get(basePath) as LayerHandler).useMiddleware(
       deepPath,
       handler,
@@ -37,7 +34,6 @@ export class ChainHandler implements ContextHandlerInterface {
   setRoute(route: Route) {
     this.baseRoute = route;
     for (const key of this.routes.keys()) {
-      console.log("connecting ", route.pattern, "with key ", key);
       const deepRoute: Route = new Route(HttpMethod.ALL, key);
       deepRoute.connectWithParent(this.baseRoute);
       this.routes.get(key)?.setRoute(deepRoute);
