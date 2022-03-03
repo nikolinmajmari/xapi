@@ -133,7 +133,6 @@ export class LayerHandler implements LayerInterface, ContextHandlerInterface {
   async handle(context: RoutingContextInterface) {
     const strict = this.route?.isStrictMatch(context.url.pathname) ?? false;
     if (strict) {
-      console.log(this.handelers, this.methods);
       let start = 0;
       for (; start < this.handelers.length; start++) {
         if (
