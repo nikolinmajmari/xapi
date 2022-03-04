@@ -249,7 +249,7 @@ export class LayerHandler implements LayerInterface, ContextHandlerInterface {
           end++;
         }
 
-        if (start == this.handelers.length - 1) {
+        if (start >= this.handelers.length - 1) {
           break;
         } else {
           ///
@@ -288,6 +288,7 @@ export class LayerHandler implements LayerInterface, ContextHandlerInterface {
           } else if (end != this.handelers.length) {
             chainedSuccessor.setSuccessor(this.handelers[end]);
           }
+          // console.log(this.methods, start);
           this.handelers[start].setSuccessor(chainedSuccessor);
           start = end;
           end = start + 1;

@@ -1,12 +1,12 @@
 import {assertEquals} from "https://deno.land/std/testing/asserts.ts";
 import {HttpMethod, RoutingContext} from "../../lib/context.ts";
-import {LayerHandler} from "../../lib/handeler/layer_handeler.ts";
+import {ChainHandler} from "../../lib/handeler/chain_handeler.ts";
 import {Route} from "../../lib/handeler/route.ts";
-import {TestContextHandeler, TestContextType} from "../test_context.ts";
+import {TestContextType, TestContextHandeler} from "../test_context.ts";
 
-const layer = new LayerHandler();
+const chainedHander = new ChainHandler();
 const createChainableMiddleware = (path: string, method: HttpMethod) => {
-  layer.useMiddleware(
+  chainedHander.use(
     path,
     new TestContextHandeler((ctx, next) => {
       ctx[path + method] = true;
@@ -16,7 +16,7 @@ const createChainableMiddleware = (path: string, method: HttpMethod) => {
   );
 };
 const createEndMiddleware = (path: string, method: HttpMethod) => {
-  layer.useMiddleware(
+  chainedHander.use(
     path,
     new TestContextHandeler((ctx, next) => {
       ctx[path + method] = true;
@@ -25,14 +25,12 @@ const createEndMiddleware = (path: string, method: HttpMethod) => {
   );
 };
 const closeChain = (signal: () => void) => {
-  layer.useMiddleware(
-    "/",
+  chainedHander.setSuccessor(
     new TestContextHandeler<TestContextType>((ctx, next) => {
       signal();
     })
   );
-  layer.setRoute();
-  layer.chainHandlers();
+  chainedHander.setRoute(new Route(HttpMethod.ALL, "/"));
 };
 const createRoutingContext = (path: string, method: HttpMethod) => {
   return new RoutingContext<TestContextType>(
@@ -47,10 +45,9 @@ const testCase = (
   test: (ctx: TestContextType) => void
 ) => {
   const context = createRoutingContext(path, method);
-  layer.handle(context);
+  chainedHander.handle(context);
   test(context.context);
 };
-
 createChainableMiddleware("/home", HttpMethod.ALL);
 createChainableMiddleware("/home", HttpMethod.POST);
 createChainableMiddleware("/login", HttpMethod.GET);
@@ -60,32 +57,29 @@ createChainableMiddleware("/home/auth/me", HttpMethod.POST);
 createChainableMiddleware("/home/auth", HttpMethod.ALL);
 closeChain(() => 1);
 
-Deno.test({
-  name: "testing single level path match and method match ",
-  fn: () => {
-    testCase("home", HttpMethod.POST, (ctx) =>
-      assertEquals(ctx, {
-        ["/home" + HttpMethod.ALL]: true,
-        ["/home" + HttpMethod.POST]: true,
-      })
-    );
-    testCase("home", HttpMethod.GET, (ctx) =>
-      assertEquals(ctx, {["/home" + HttpMethod.ALL]: true})
-    );
-    testCase("login", HttpMethod.POST, (ctx) => assertEquals(ctx, {}));
-    testCase("home/auth", HttpMethod.POST, (ctx) =>
-      assertEquals(ctx, {
-        ["/home" + HttpMethod.ALL]: true,
-        ["/home/auth" + HttpMethod.POST]: true,
-      })
-    );
-    testCase("home/auth/me", HttpMethod.POST, (ctx) =>
-      assertEquals(ctx, {
-        ["/home/auth/me" + HttpMethod.POST]: true,
-        ["/home" + HttpMethod.ALL]: true,
-        ["/home/auth" + HttpMethod.ALL]: true,
-      })
-    );
-    console.log("layer handeler test case 1 successfully passed");
-  },
+Deno.test("testing chained handler", () => {
+  testCase("home", HttpMethod.POST, (ctx) =>
+    assertEquals(ctx, {
+      ["/home" + HttpMethod.ALL]: true,
+      ["/home" + HttpMethod.POST]: true,
+    })
+  );
+  testCase("home", HttpMethod.GET, (ctx) =>
+    assertEquals(ctx, {["/home" + HttpMethod.ALL]: true})
+  );
+  testCase("login", HttpMethod.POST, (ctx) => assertEquals(ctx, {}));
+  testCase("home/auth", HttpMethod.POST, (ctx) =>
+    assertEquals(ctx, {
+      ["/home" + HttpMethod.ALL]: true,
+      ["/home/auth" + HttpMethod.POST]: true,
+    })
+  );
+  testCase("home/auth/me", HttpMethod.POST, (ctx) =>
+    assertEquals(ctx, {
+      ["/home/auth/me" + HttpMethod.POST]: true,
+      ["/home" + HttpMethod.ALL]: true,
+      ["/home/auth" + HttpMethod.ALL]: true,
+    })
+  );
+  console.log("chain handler fully testested, test passed ");
 });
