@@ -1,82 +1,157 @@
 
 ## Router
 
-Minimum  routing lib. Can be used to handle routing of requests using middleware architecture. Handelers are functions which are wrapped into FunctionHandeler objects which are then used by internal library to handle routing. 
+Routing library based on middleware architecture. If you are familiar with express , this is almost the same. You can use the default router class or you can extend it to your own to use it based on your purposes. 
 
-# Example
-Router implements router interface which overloads get, post, put, patch, delete and use methods. Check interface for api. 
+Define an context of some type to be shared across middleweare functions 
 ```ts
-import { Router } from "../../../xapi/router/router.ts";
-import { HttpContextInterface } from "../../../xapi/http/http.lib.ts";
-const router = new Router();
-
-router.get("/", function (ctx: HttpContextInterface, next: Function) {
- // implement handler
- // call  next() for the next middleware 
-});
-
-router.use(function(ctx:HttpContextInterface,next:Function){
-  // implement handler
-});
-
-router.post("/new", function (ctx: HttpContextInterface, next: Function) {
-  // implement handler 
-});
+interface Context{
+   event: RequestEvent
+}
 
 ```
 
-Route params and regular expressions are supported 
-Router implements router interface which overloads get, post, put, patch, delete and use methods. Check interface for api. 
+Define a function type that you will use on your middleware architecture
 ```ts
-import { Router } from "../../../xapi/router/router.ts";
-import { HttpContextInterface } from "../../../xapi/http/http.lib.ts";
-const router = new Router();
-
-router.get("/:id(\\d)", function (ctx: HttpContextInterface, next: Function) {
- const id = ctx.request.params.id;
- // call  next() for the next middleware 
-});
+type BaseFunctionHandler<C extends Context = Context> = (context: Context, next: () => void) => void;
 
 ```
+Create and context handeler adapter so the library can call your function and pas to it next middleware function and routing context
+Adapter implements ContextHandelerInterface so it can be chained and called from the library. 
 
-check the RouterInterface for more information on what router class methods offers (https://github.com/nikolinmajmari/xapi/blob/main/xapi/router/router.ts)
-
-# Adapters 
-You can create your own adapters to decide how handelers are invoked by the routing component. The adapter class implements ContextHandlerInterface<HttpContextInterface>
-  from the router.lib.ts library. This interface defines two methods handler(ctx:ContextHandlerInterface<HttpContextInterface>) and setSuccessor(ContextHandlerInterface<HttpContextInterface>) which sets the next successor to be called in the middleware. Below is the base class that implements this interface which can be used from the ROuter class. 
-  
- ```ts
- export class RoutingContextHandlerAdapter
-  implements ContextHandlerInterface<HttpContextInterface> {
-  protected successor?: ContextHandlerInterface<HttpContextInterface>;
-  protected handler: Function;
-  constructor(handler: Function) {
-    this.handler = handler;
+```ts
+export class ContextHandelerAdapter<
+  C extends Context=Context,
+  F extends Function = BaseFunctionHandler<Context>
+> implements ContextHandlerInterface
+{
+  #handeler: F;
+  #sucessor: ContextHandlerInterface | undefined;
+  constructor(handeler: F) {
+    this.#handeler = handeler;
   }
-
-  handle(context: HttpContextInterface): void {
-    // choose your own apo to call the handler 
-    this.handler(context, () => this.invokeSuccessor(context));
+  handle(routingContext: RoutingContext<Context>): void {
+    this.#handeler(routingContext.context, () =>
+      this.invokeSucessor(routingContext)
+    );
   }
-  setSuccessor(successor: ContextHandlerInterface<HttpContextInterface>): void {
-    this.successor = successor;
+  setSuccessor(successor: ContextHandlerInterface): void {
+    this.#sucessor = successor;
   }
-  // method that calls successor 
-  invokeSuccessor(context: HttpContextInterface) {
-    if (this.successor) {
-      this.successor.handle(context);
+  invokeSucessor(routingContext: RoutingContext<Context>) {
+    if (this.#sucessor != undefined) {
+      this.#sucessor?.handle(routingContext);
+    } else {
+      throw "sucessor not found for this middleware on " + this;
     }
   }
-} 
-  ```
+}
 
- ## export your router so you can use it ro route your web app 
+
+```
+
+Define the defaultAdaptorCreatorMethod as below and pass this method to router
+so router can convert functions to ContextHandelerAdapterTypes
 ```ts
- 
- export default Router extends Router<RoutingContextHandlerAdapter>{};
- 
- ```
- 
-Thanks for reading. 
- 
+const defaultAdapterCreater = <Context, F extends Function>(item: F) =>
+  new ContextHandelerAdapter<Context, F>(item);
+
+```
+
+
+Create your router class extending from XapiRouter and start using it for your amazing apps. 
+
+```ts
+export class Router<Context> extends XapiRouter<
+  Context,
+  BaseFunctionHandler<Context>,
+  ContextHandelerAdapter<Context, BaseFunctionHandler<Context>>
+> {
+  constructor() {
+    super(defaultAdapterCreater);
+  }
+}
+
+```
+
+Import your new router and start building up your app, it supports nesting and route params also, also regular expressions are supported as strings 
+Router class defines some handy methods with multible overrides to make its usage easier
+
+```ts
+import {Router} from "xapi-router";
+const router = new Router();
+var inMemoryDatabase: { id: number; title: string; content: string }[] = [];
+var ID = 0;
+
+const createNote = (title: string, content: string) => {
+  ID++;
+  return {
+    id: ID,
+    title: title,
+    content: content,
+  };
+};
+
+router.get("/", function (ctx, next) {
+   // handle get here
+});
+
+router.post("/new", function (ctx, next) {
+  /// handle post here
+});
+
+router.get(
+  "/:id(\\d)/edit",
+  function (ctx, next) {
+    // handle get here 
+  },
+);
+
+router.get(
+  "/:id(\\d)/:property(title|id|content)",
+  function (ctx, next) {
+
+  },
+);
+
+router.delete("/:id(\\d)/delete", [
+  (ctx, next) => {
+    // handle delete
+  },
+]);
+
+export default router;
+
+```
+
+Once you create a router you can call its handle method pass routing context to it and let the router call the 
+function based on your parameters.
+MyContext is some class that implements Context interface defined upper , these are your choice 
+routing context also needs an url and an http method. 
+During routing params are stored on routing context. You can modify handle method on routing context adapter in order to 
+pass these parameters to the context object so the function can access them
+```ts
+import {RoutingContext} from "xapi-router";
+const routingContext = new RoutingContext<Context>(new MyContext(),new URL("http://localhost/home/1/new"),HttpMethod.POST);
+```
+
+let the library decide who are the handelers to handle this RoutingContext. Before handeling the context you need to build up
+the graph of functions in middleware,
+this needs to be done only once and for the top most level router, 
+then you can handle as many contexes as you want.
+```ts
+  router.setRoute();
+  router.setSuccessor(
+    new ContextHandelerAdapter((ctx, next) => {
+       // console.log("route not found");
+    })
+  );
+
+router.handle(routingContext);
+router.handle(routingContext);
+router.handle(routingContext);
+
+```
+
+Check for more information the file on main github repo path  /xapi/app/application.ts 
  
