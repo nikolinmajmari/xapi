@@ -43,7 +43,6 @@ export function createRoutingContext(ctx: HttpContextInterface) {
     default:
       throw "Unknown http method";
   }
-  console.log(ctx.request.url);
   let url = new URL(ctx.request.requestEvent.request.url);
   return new RoutingContext<HttpContextInterface>(ctx, url, method);
 }

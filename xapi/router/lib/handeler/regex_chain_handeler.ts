@@ -9,43 +9,53 @@ import {ParamParser, Route} from "./route.ts";
  */
 export class RegexChainHandler implements ContextHandlerInterface {
   private baseRoute?: Route;
+  private parentRoute?: Route;
   private handler?: LayerHandler;
-  private regex?: RegExp;
-  private stringRegex?: string | null;
-  private param?: string | null;
+  private parser: ParamParser | undefined;
+  private param: string | undefined;
+  private part: string | undefined;
+  private regexString: string | undefined;
+  private regex: RegExp | undefined;
   private successor?: ContextHandlerInterface;
   constructor() {}
 
-  setRoute(route: Route) {
-    ///
-    /// base route    /base
-    /// deep route    /deep/route
-    /// deep route after
-    /// binding       /base/deep/route
-    ///
-    /// routes are chained from top to bottom
-    /// science the programer defines them from bottom up
-
-    this.baseRoute = route;
-    const deepRoute: Route = new Route(
-      HttpMethod.ALL,
-      this.stringRegex != null ? `(${this.stringRegex})` : "([^/]*)"
+  matches(path: string) {
+    return (
+      path.split("/").slice(1, 2).join("/") == this.part ||
+      this.part == undefined
     );
-    deepRoute.setRegex(true);
-    deepRoute.bindToParent(this.baseRoute);
-    this.handler?.setRoute(deepRoute);
+  }
+
+  setRoute(route: Route) {
+    this.parentRoute = route;
+    this.baseRoute = new Route(
+      HttpMethod.ALL,
+      this.regexString != null ? `(${this.regexString})/` : "([^/]*)/"
+    );
+    this.baseRoute.setRegex(true);
+    this.baseRoute.bindToParent(route);
+    this.handler?.setRoute(this.baseRoute);
+    //console.log("base route :", this.baseRoute.pattern);
   }
 
   handle(context: RoutingContextInterface) {
-    const url = context.url.pathname;
-    const local = url
-      .replace(this.baseRoute?.prefixRegex ?? "", "")
-      .split("/")[0];
-    context.params = {
-      [this.param ?? ""]: local,
-      ...context.params,
-    };
-    this.handler?.handle(context);
+    const url = context.path;
+    if (this.baseRoute?.isPrefixMatch(url)) {
+      if (this.param != "" && this.param != undefined) {
+        const parts = url.replace(this.parentRoute?.prefixRegex ?? "/", "");
+        const param = parts.split("/")[0];
+        context.params = {
+          [this.param ?? ""]: param,
+          ...context.params,
+        };
+      }
+      //console.log(context.params);
+      this.handler?.handle(context);
+    } else if (this.successor != undefined) {
+      this.successor.handle(context);
+    } else {
+      throw "Not handled middleware";
+    }
   }
 
   setSuccessor(successor: ContextHandlerInterface) {
@@ -58,11 +68,14 @@ export class RegexChainHandler implements ContextHandlerInterface {
     /// basepath     /basepath
     /// deeppath     /deep/path
     const basePath = path.split("/").slice(1, 2).join("/");
+    this.part = basePath;
     const deepPath = "/" + path.split("/").slice(2).join("/");
-    const paramParser = new ParamParser(basePath);
-    this.regex = paramParser.getRegex();
-    this.param = paramParser.getParam();
-    this.stringRegex = paramParser.getRegexString();
+    //console.log(basePath, deepPath);
+    this.parser = new ParamParser(basePath);
+    this.regexString = this.parser.getRegexString() ?? undefined;
+    this.regex = this.parser.getRegex();
+    this.param = this.parser.getParam();
+    //console.log("use: ", this.param, this.regex, this.regexString);
     if (this.handler == undefined) {
       this.handler = new LayerHandler();
     }

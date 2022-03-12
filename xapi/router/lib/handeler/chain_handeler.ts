@@ -34,7 +34,7 @@ export class ChainHandler implements ContextHandlerInterface {
   setRoute(route: Route) {
     this.baseRoute = route;
     for (const key of this.routes.keys()) {
-      const deepRoute: Route = new Route(HttpMethod.ALL, key);
+      const deepRoute: Route = new Route(HttpMethod.ALL, key + "/");
       deepRoute.connectWithParent(this.baseRoute);
       this.routes.get(key)?.setRoute(deepRoute);
     }
@@ -44,7 +44,7 @@ export class ChainHandler implements ContextHandlerInterface {
     const pattern = this.baseRoute?.isRegex
       ? new RegExp(this.baseRoute?.pattern)
       : this.baseRoute?.pattern;
-    const key = context.url.pathname.replace(pattern ?? "", "").split("/")[0];
+    const key = context.path.replace(pattern ?? "", "").split("/")[0];
     const handler = this.routes.get(key) ?? this.successor;
     if (handler != null) {
       handler.handle(context);

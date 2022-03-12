@@ -81,6 +81,7 @@ export class LayerHandler implements LayerInterface, ContextHandlerInterface {
    * @param method supported mtehod by context handler
    */
   useMiddleware(
+    // deno-lint-ignore no-inferrable-types
     path: string = "/",
     handler: ContextHandlerInterface,
     method: HttpMethod = HttpMethod.ALL
@@ -100,7 +101,11 @@ export class LayerHandler implements LayerInterface, ContextHandlerInterface {
       let regexChainHandler: RegexChainHandler;
       if (
         this.handelers.length > 0 &&
-        this.handelers[this.handelers.length - 1] instanceof RegexChainHandler
+        this.handelers[this.handelers.length - 1] instanceof
+          RegexChainHandler &&
+        (
+          this.handelers[this.handelers.length - 1] as RegexChainHandler
+        ).matches(path)
       ) {
         regexChainHandler = this.handelers[
           this.handelers.length - 1
@@ -109,8 +114,8 @@ export class LayerHandler implements LayerInterface, ContextHandlerInterface {
         regexChainHandler = new RegexChainHandler();
         this.handelers.push(regexChainHandler);
         this.methods.push(HttpMethod.ALL);
+        regexChainHandler.use(path, handler, method);
       }
-      regexChainHandler.use(path, handler, method);
     } else {
       // these are handlers for the deeper layers
       let chainHandler: ChainHandler;
@@ -131,7 +136,7 @@ export class LayerHandler implements LayerInterface, ContextHandlerInterface {
   }
 
   async handle(context: RoutingContextInterface) {
-    const strict = this.route?.isStrictMatch(context.url.pathname) ?? false;
+    const strict = this.route?.isStrictMatch(context.path) ?? false;
     if (strict) {
       let start = 0;
       for (; start < this.handelers.length; start++) {

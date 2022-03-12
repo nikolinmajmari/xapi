@@ -4,9 +4,13 @@ import {HttpMethod} from "../context.ts";
  * holds infor about route information , used for regex operations
  */
 export class Route {
+  // todo remove method
   #method: HttpMethod;
+  /// string pattern reprezenting the route
   #pattern: string;
+  /// strict reg exp reprezented by route
   #strictRegex?: RegExp;
+  /// prefix reg exp reprezented by route
   #prefixRegex?: RegExp;
   #isRegex: boolean;
   constructor(method: HttpMethod, route: string) {
@@ -17,8 +21,10 @@ export class Route {
   bindToParent(parent: Route) {
     this.connectWithParent(parent);
   }
+
+  /// routes are connected to parents from up to bottom
   connectWithParent(parent: Route) {
-    this.#pattern = `${parent.pattern ?? "/"}${this.#pattern ?? ""}/`;
+    this.#pattern = `${parent.pattern ?? "/"}${this.#pattern ?? ""}`;
     this.#strictRegex = new RegExp(`^${this.pattern}$`);
     this.#prefixRegex = new RegExp(`^${this.pattern}`);
     this.#isRegex = this.#isRegex || parent.#isRegex;
@@ -43,15 +49,24 @@ export class Route {
     return this.#prefixRegex;
   }
 
+  /**
+   * checks if an uri strictly matches the route
+   * for example /uri/myuri strictly matches /uri/myuri while /uri/myuri/he does not strictly matches
+   * @param uri
+   * @returns
+   */
   isStrictMatch(uri: string) {
     return this.#strictRegex?.test(uri) || this.#strictRegex?.test(uri + "/");
   }
 
+  /**
+   * check if the uri is prefix of this route
+   * @param uri
+   * @returns
+   */
   isPrefixMatch(uri: string) {
-    return (
-      (this.#prefixRegex?.test(uri) || this.#prefixRegex?.test(uri + "/")) ??
-      false
-    );
+    //console.log("perfix regex: ", this.#prefixRegex);
+    return this.#prefixRegex?.test(uri) ?? false;
   }
 }
 
