@@ -1,13 +1,6 @@
-## Router
-
-Routing library based on middleware architecture. If you are familiar with express , this is almost the same. You can use the default router class or you can extend it to your own to use it based on your purposes.
-
-Check the below example on how you can use the library
-
-```ts
-import {RoutingContext} from "https://deno.land/x/xapi_router@v0.0.1/mod.ts";
-import type {ContextHandlerInterface} from "https://deno.land/x/xapi_router@v0.0.1/mod.ts";
-import {XapiRouter} from "https://deno.land/x/xapi_router@v0.0.1/mod.ts";
+import {RoutingContext} from "./context.ts";
+import {ContextHandlerInterface} from "./handeler/handelers.ts";
+import {Router as XapiRouter} from "./xapi_router.ts";
 
 /**
  * The shared information accross the middleware functions
@@ -81,6 +74,3 @@ export class Router extends XapiRouter<
     super(defaultAdapterCreater);
   }
 }
-```
-
-Check for more information the file on main github repo path /xapi/app/application.ts
