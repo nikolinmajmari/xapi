@@ -173,7 +173,7 @@ Then create a file main.ts and import the Application class and Router class
 import Router, {Context} from "./router.ts";
 import App from "./app.ts";
 
-const mainRouter = new App();
+const app = new App();
 const userRouter = new Router();
 userRouter.get("/:id(\\d)", (ctx, next) => {
   ctx.event.respondWith(new Response("some user with id" + ctx.params.id));
@@ -207,15 +207,15 @@ userRouter.post("/", [
     ctx.event.respondWith(new Response("success"));
   },
 ]);
-mainRouter.use((ctx: Context, next: () => void) => {
+app.use((ctx: Context, next: () => void) => {
   console.log("request got");
   next();
 });
-mainRouter.use(usersRouter);
+app.use(usersRouter);
 
 //// set your error handler
 
-mainRouter.use((ctx, next) => {
+app.use((ctx, next) => {
   ctx.respondWith(new Response("not found"));
 });
 
