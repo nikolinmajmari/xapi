@@ -47,7 +47,7 @@ interface RouterInterface<
 export class Router<C, F extends Function, A extends ContextHandlerInterface>
   implements RouterInterface<ContextHandlerInterface, F>
 {
-  private createAdaptor: (item: F) => A;
+  protected createAdaptor: (item: F) => A;
   constructor(createAdaptor: (item: F) => A) {
     this.createAdaptor = createAdaptor;
   }
