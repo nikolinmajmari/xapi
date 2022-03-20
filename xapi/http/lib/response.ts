@@ -16,12 +16,54 @@ export class XapiResponse implements XapiResponseInterface {
   }
 
   /**
-   * Sents the response through Deno.Event
+   *
+   * @param status
+   * @returns
    */
-  private endResponse() {
+  withStatusCode(status: number): XapiResponseInterface {
+    this.response.status = status;
+    return this;
+  }
+
+  /**
+   *
+   * @param headers
+   * @returns
+   */
+  withHeaders(headers: {[key: string]: string}): XapiResponseInterface {
+    for (const key in headers) {
+      this.response.headers?.append(key, headers[key]);
+    }
+    return this;
+  }
+
+  /**
+   *
+   * @param body
+   * @returns
+   */
+  withBody(body: BodyInit): XapiResponseInterface {
+    this.response.body = body;
+    return this;
+  }
+
+  /**
+   *
+   * @param text
+   * @returns
+   */
+  withStatusText(text: string): XapiResponseInterface {
+    this.response.statusText = text;
+    return this;
+  }
+
+  /**
+   *
+   */
+  private async endResponse() {
     if (this.#sent == false) {
       this.#sent = true;
-      this.#event.respondWith(
+      await this.#event.respondWith(
         new Response(this.response.body, {
           headers: this.response.headers,
           status: this.response.status,
@@ -34,60 +76,21 @@ export class XapiResponse implements XapiResponseInterface {
   }
 
   /**
-   *
-   * @param status set the status code of the response to sent
-   * @returns
-   */
-  withStatusCode(status: number) {
-    this.response.status = status;
-    return this;
-  }
-  /**
-   *
-   * @param headers add headers to the response to sent, typical are the cokie headers
-   * @returns
-   */
-  withHeaders(headers: {[key: string]: string}) {
-    for (const header in headers) {
-      this.response.headers?.set(header, headers[header]);
-    }
-    return this;
-  }
-  /**
-   *
-   * @param body Add the body of the request
-   * @returns
-   */
-  withBody(body: BodyInit) {
-    this.response.body = body;
-    return this;
-  }
-  /**
-   *
-   * @param text Add the status text of the response
-   * @returns
-   */
-  withStatusText(text: string) {
-    this.response.statusText = text;
-    return this;
-  }
-
-  /**
    * end the response and sent it. After you call end you can not sent any response
    */
-  end(): void {
-    this.endResponse();
+  async end(): Promise<void> {
+    return await this.endResponse();
   }
 
   /**
    * Endable
    * @param content
    */
-  send(
+  async send(
     body: BodyInit | null | undefined = this.response.body,
     init: ResponseInit = {}
-  ) {
-    this.#event.respondWith(
+  ): Promise<void> {
+    await this.#event.respondWith(
       new Response(body, {
         headers: this.response.headers,
         status: this.response.status,
@@ -97,23 +100,38 @@ export class XapiResponse implements XapiResponseInterface {
     );
   }
 
-  stream() {
-    this.send(undefined, {});
+  /**
+   *
+   */
+  async stream(): Promise<void> {
+    await this.send(undefined, {});
   }
 
-  view() {}
+  /**
+   *
+   */
+  async view(): Promise<void> {}
 
-  redirect() {}
+  /**
+   *
+   * @param url
+   */
+  async redirect(url: string): Promise<void> {
+    this.response.status = 302;
+    this.response.statusText = "redirect";
+    this.response.headers?.append("Location", url);
+    await this.#event.respondWith(new Response(null, this.response));
+  }
 
-  json(content: {}) {
+  /**
+   *
+   * @param content
+   */
+  async json(content: {}): Promise<void> {
     this.response.headers?.set("Content-Type", "application/json");
     this.response.status = 200;
-    this.#event.respondWith(
-      new Response(JSON.stringify(content), {
-        headers: this.response.headers,
-        status: 200,
-        statusText: "success",
-      })
+    await this.#event.respondWith(
+      new Response(JSON.stringify(content), this.response)
     );
   }
 }

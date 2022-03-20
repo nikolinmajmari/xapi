@@ -117,21 +117,18 @@ export interface XapiResponseInterface {
   /**
    * end the response and sent it. After you call end you can not sent any response
    */
-  end(): void;
+  end(): Promise<void>;
   /**
    * Endable
    * @param content
    */
-  send(
-    body: BodyInit | null | undefined = this.response.body,
-    init: ResponseInit = {}
-  ): void;
+  send(body: BodyInit | null | undefined, init: ResponseInit): Promise<void>;
 
-  stream(): void;
+  stream(): Promise<void>;
 
-  view(): void;
+  view(): Promise<void>;
 
-  redirect(): void;
+  redirect(url: string): Promise<void>;
 
-  json(content: {}): void;
+  json(content: {}): Promise<void>;
 }

@@ -1,53 +1,55 @@
-import RequestBody from "./body.ts";
+import RequestBody, {JsonType} from "./body.ts";
 
+/**
+ *
+ */
 export class XapiRequest {
-  requestBody: RequestBody;
-  #body: undefined | string | Uint8Array | null | {[key: string]: any};
   headers: Headers;
-  params: {[key: string]: any} = {};
-  query: {[key: string]: any} = {};
-  readonly requestEvent: Deno.RequestEvent;
+  params: JsonType = {};
+  #body: RequestBody;
+  query: URLSearchParams;
+  readonly request: Request;
   url: string;
   method: string;
-  constructor(event: Deno.RequestEvent) {
-    this.requestEvent = event;
-    this.requestBody = new RequestBody(event.request.body);
-    this.method = event.request.method;
-    this.url = event.request.url;
-    this.headers = event.request.headers;
-    event.request.body;
+  constructor(request: Request) {
+    this.request = request;
+    this.method = request.method;
+    this.url = request.url;
+    this.query = new URLSearchParams(new URL(this.url).search);
+    this.headers = request.headers;
+    this.#body = new RequestBody(request);
   }
 
-  get body(): string | Uint8Array | null | {[key: string]: any} {
-    return this.requestBody.data;
+  get body() {
+    return this.#body;
   }
 
   get signal(): AbortSignal {
-    return this.requestEvent.request.signal;
+    return this.request.signal;
   }
 
   get integrity(): string {
-    return this.requestEvent.request.integrity;
+    return this.request.integrity;
   }
   get keepAlive(): boolean {
-    return this.requestEvent.request.keepalive;
+    return this.request.keepalive;
   }
   get mode(): RequestMode {
-    return this.requestEvent.request.mode;
+    return this.request.mode;
   }
 
   get redirect(): RequestRedirect {
-    return this.requestEvent.request.redirect;
+    return this.request.redirect;
   }
 
   get referrer(): string {
-    return this.requestEvent.request.referrer;
+    return this.request.referrer;
   }
   get referrerPolicy(): ReferrerPolicy {
-    return this.requestEvent.request.referrerPolicy;
+    return this.request.referrerPolicy;
   }
 
   get blob(): Promise<Blob> {
-    return this.requestEvent.request.blob();
+    return this.request.blob();
   }
 }
