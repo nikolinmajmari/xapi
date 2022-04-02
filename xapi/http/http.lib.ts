@@ -15,14 +15,13 @@ export interface HttpContextInterface {
 export class HttpContext implements HttpContextInterface {
   readonly request: HttpRequest;
   readonly response: HttpResponse;
-  constructor(requestEvent:Deno.RequestEvent) {
+  constructor(requestEvent: Deno.RequestEvent) {
     this.request = new HttpRequest(requestEvent);
     this.response = new HttpResponse(requestEvent);
   }
 
-
-  static fromRequestEvent(event:Deno.RequestEvent):HttpContext{
-    return new HttpContext(event)
+  static fromRequestEvent(event: Deno.RequestEvent): HttpContext {
+    return new HttpContext(event);
   }
 }
 
@@ -35,18 +34,25 @@ export class HttpResponse {
     this.headers = new Headers();
   }
   send(content: string) {
-    this.event.respondWith(new Response(content,{headers:this.headers,status:200}));
+    this.event.respondWith(
+      new Response(content, {headers: this.headers, status: 200})
+    );
   }
-  json(content:{}){
-    this.event.respondWith(new Response(JSON.stringify(content),{headers:this.headers,status:200}));
+  json(content: {}) {
+    this.event.respondWith(
+      new Response(JSON.stringify(content), {
+        headers: this.headers,
+        status: 200,
+      })
+    );
   }
 }
 
 export class HttpRequest {
-  body: string | Uint8Array | null | { [key: string]: any } = null;
+  body: string | Uint8Array | null | {[key: string]: any} = null;
   headers: Headers;
-  params: { [key: string]: any } = {};
-  query: { [key: string]: any } = {};
+  params: {[key: string]: any} = {};
+  query: {[key: string]: any} = {};
   readonly requestEvent: Deno.RequestEvent;
   url: string;
   method: string;
@@ -54,7 +60,7 @@ export class HttpRequest {
     this.requestEvent = event;
     this.body = event.request.body;
     this.method = event.request.method;
-    this.url = event.request.url.replace("http://localhost:9000","");
+    this.url = event.request.url.replace("http://localhost:9000", "");
     this.headers = event.request.headers;
   }
 }

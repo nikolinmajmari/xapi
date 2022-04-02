@@ -4,11 +4,13 @@ import {
   XapiRouter,
   RoutingContext,
   HttpMethod,
-} from "https://deno.land/x/xapi_router@v0.0.1/mod.ts";
+} from "../deps.ts";
 import {ContextInterface} from "./context.ts";
 
 /**
  * defines the default function type to be used in middleware
+ * @param context An instance that implements ContextInterface. Shared context accross middleware
+ * @param next An callback that invokes the next middleware function
  */
 type FunctionHandler = (context: ContextInterface, next: () => void) => void;
 
@@ -35,8 +37,8 @@ export class ContextHandelerAdapter implements ContextHandlerInterface {
   }
   handle(routingContext: RoutingContext<ContextInterface>): void {
     /// handle parameter passing
-    routingContext.context.params = {
-      ...routingContext.context.params,
+    routingContext.context.request.params = {
+      ...routingContext.context.request.params,
       ...routingContext.params,
     };
     this.#handeler(routingContext.context, () =>
@@ -66,7 +68,7 @@ export class ContextHandelerAdapter implements ContextHandlerInterface {
  *  but before extend this class to set yur C type by default
  *  the shared information between handelers
  */
-export default class Router extends XapiRouter<
+export class Router extends XapiRouter<
   ContextInterface,
   FunctionHandler,
   ContextHandelerAdapter
@@ -74,8 +76,22 @@ export default class Router extends XapiRouter<
   constructor() {
     super(defaultAdapterCreater);
   }
+
+  /**
+   * This is used to set the end function of the middleware
+   * should be called to compleete the middleware grapht
+   * @param handler Function
+   */
+  protected completeMiddlewareWith(handler: FunctionHandler) {
+    this.handler.setRoute();
+    this.handler.setSuccessor(defaultAdapterCreater(handler));
+    this.handler.chainHandlers();
+  }
 }
 
+/**
+ * factory that is used to create context
+ */
 export class RoutingContextFactory
   implements RoutingContextInterfaceFactory<ContextInterface>
 {
@@ -83,7 +99,7 @@ export class RoutingContextFactory
     ctx: ContextInterface
   ): RoutingContext<ContextInterface> {
     let method;
-    switch (ctx.event.request.method) {
+    switch (ctx.request.method) {
       case "get":
       case "Get":
       case "GET":
@@ -112,7 +128,7 @@ export class RoutingContextFactory
       default:
         throw "Unknown http method";
     }
-    let url = new URL(ctx.event.request.url);
+    let url = new URL(ctx.request.url);
     return new RoutingContext<ContextInterface>(ctx, url, method);
   }
 }

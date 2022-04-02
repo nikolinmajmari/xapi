@@ -109,11 +109,6 @@ export class XapiResponse implements XapiResponseInterface {
 
   /**
    *
-   */
-  async view(): Promise<void> {}
-
-  /**
-   *
    * @param url
    */
   async redirect(url: string): Promise<void> {

@@ -124,10 +124,6 @@ export interface XapiResponseInterface {
    */
   send(body: BodyInit | null | undefined, init: ResponseInit): Promise<void>;
 
-  stream(): Promise<void>;
-
-  view(): Promise<void>;
-
   redirect(url: string): Promise<void>;
 
   json(content: {}): Promise<void>;
