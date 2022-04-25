@@ -1,4 +1,4 @@
-import {Router} from "../../../xapi/app/mod.ts";
+import {Router} from "../deps.ts";
 
 interface Note {
   id: number;
@@ -15,6 +15,7 @@ let db: Note[] = [];
 router.get("/", async (ctx, next) => {
   await ctx.response.json(db);
 });
+
 /**
  * return a specific note
  */
@@ -41,9 +42,9 @@ router.post("/", async (ctx, next) => {
 });
 
 /**
- * update specific fields
+ * update specific note
  */
-router.post("/:id(\\d+)", async (ctx, next) => {
+router.patch("/:id(\\d+)", async (ctx, next) => {
   await ctx.request.body.parseJson();
   const json = ctx.request.body.json;
   console.log("patxh");
@@ -61,10 +62,9 @@ router.post("/:id(\\d+)", async (ctx, next) => {
 });
 
 /**
- * delete specific field
+ * delete specific note
  */
 router.delete("/:id(\\d+)", async (ctx, next) => {
-  console.log("deleting");
   const note = db.find((val) => val.id == ctx.request.params.id);
   if (note != undefined) {
     db = db.filter((val) => val.id != ctx.request.params.id);

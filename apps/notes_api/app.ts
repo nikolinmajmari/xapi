@@ -1,5 +1,6 @@
-import {Application} from "../../xapi/app/mod.ts";
+import {Application} from "./deps.ts";
 import notesRouter from "./routes/notes.ts";
+import authRouter from "./routes/auth.ts";
 
 const app = new Application();
 app.use((ctx, next) => {
@@ -11,6 +12,7 @@ app.use((ctx, next) => {
   );
   next();
 });
+app.use("/auth", authRouter);
 app.use("/notes", notesRouter);
 app.use(async (ctx, next) => {
   console.log("not found");

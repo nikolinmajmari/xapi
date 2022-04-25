@@ -58,7 +58,7 @@ export default class RequestBody implements ParsableBodyInterface {
     }
   }
   async parseForm(): Promise<void> {
-    new URLSearchParams(
+    this.#form = new URLSearchParams(
       decoder.decode(await this.uint8Array()).replace(/\+/g, " ")
     );
   }
