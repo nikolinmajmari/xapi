@@ -49,7 +49,6 @@ export class RegexChainHandler implements ContextHandlerInterface {
           ...context.params,
         };
       }
-      //console.log(context.params);
       this.handler?.handle(context);
     } else if (this.successor != undefined) {
       this.successor.handle(context);

@@ -34,13 +34,13 @@ export class ChainedSuccessor implements ContextHandlerInterface {
         this.methodSuccessors.set(HttpMethod.POST, successor);
         break;
       case HttpMethod.PUT:
-        this.methodSuccessors.set(HttpMethod.POST, successor);
+        this.methodSuccessors.set(HttpMethod.PUT, successor);
         break;
       case HttpMethod.PATCH:
-        this.methodSuccessors.set(HttpMethod.POST, successor);
+        this.methodSuccessors.set(HttpMethod.PATCH, successor);
         break;
       case HttpMethod.DELETE:
-        this.methodSuccessors.set(HttpMethod.POST, successor);
+        this.methodSuccessors.set(HttpMethod.DELETE, successor);
         break;
       case HttpMethod.ALL:
         this.setSuccessor(successor);

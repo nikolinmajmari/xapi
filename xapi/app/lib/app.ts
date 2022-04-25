@@ -1,12 +1,17 @@
-import {
-  Router,
-  defaultAdapterCreater,
-  RoutingContextFactory,
-} from "./router.ts";
+import {Router, RoutingContextFactory} from "./router.ts";
 import {Context} from "./context.ts";
 
+/**
+ * Web application instance
+ * holds configuration of the application like env variables port , hostname etc
+ */
 export class Application extends Router {
   private port?: number;
+  private listener: Deno.Listener | undefined;
+
+  /**
+   *  constructor of the app
+   */
   constructor() {
     super();
   }
@@ -15,6 +20,7 @@ export class Application extends Router {
     this.completeMiddlewareWith(async (ctx, next) => {
       await ctx.response.withStatusCode(404).withBody("Not found").end();
     });
+
     const routingContextFactory = new RoutingContextFactory();
     const server = Deno.listen({port: port ?? 8000});
     console.log(

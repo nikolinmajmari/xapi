@@ -30,12 +30,16 @@ export class RoutingContext<T> implements RoutingContextInterface {
     this.method = method;
     this.params = {};
     const path = this.url.pathname;
-    if (path.length > 0) {
-      if (path[path.length - 1] != "/") {
-        this.path = path + "/";
+    this.path = path;
+    this.ensurePathEndsWithSlash();
+  }
+
+  protected ensurePathEndsWithSlash() {
+    if (this.path.length > 0) {
+      if (this.path[this.path.length - 1] != "/") {
+        this.path = this.path + "/";
       }
     }
-    this.path = path;
   }
 }
 

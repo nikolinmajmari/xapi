@@ -110,6 +110,7 @@ export class LayerHandler implements LayerInterface, ContextHandlerInterface {
         regexChainHandler = this.handelers[
           this.handelers.length - 1
         ] as RegexChainHandler;
+        regexChainHandler.use(path, handler, method);
       } else {
         regexChainHandler = new RegexChainHandler();
         this.handelers.push(regexChainHandler);

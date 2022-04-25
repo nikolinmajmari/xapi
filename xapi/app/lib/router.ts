@@ -25,6 +25,8 @@ export const defaultAdapterCreater = (item: FunctionHandler) =>
 /**
  * The adapter class wraps the user function and helps the router invoke user function. It also implements
  * context handler interface so that chaining can happen
+ * @member handler The function that will handle the context
+ * @member successor The reference to next context handler adapter that might handle the context
  */
 export class ContextHandelerAdapter implements ContextHandlerInterface {
   /**

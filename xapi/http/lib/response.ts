@@ -1,4 +1,6 @@
 import {XapiResponseInterface} from "./http.d.ts";
+import {MultipartWriter} from "https://deno.land/std/mime/mod.ts";
+import {Buffer} from "https://deno.land/std@0.133.0/io/buffer.ts";
 
 /**
  *  XapiResponse wraps Deno.event. Is used to construct a [Response] and sent it through deno.Event
@@ -128,6 +130,13 @@ export class XapiResponse implements XapiResponseInterface {
     await this.#event.respondWith(
       new Response(JSON.stringify(content), this.response)
     );
+  }
+
+  async resource(path: string) {
+    const buf = new Buffer();
+    const mw = new MultipartWriter(buf);
+    const fp = await Deno.open("file");
+    mw.writeField("key", "value");
   }
 }
 
