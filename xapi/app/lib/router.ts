@@ -12,7 +12,10 @@ import {ContextInterface} from "./context.ts";
  * @param context An instance that implements ContextInterface. Shared context accross middleware
  * @param next An callback that invokes the next middleware function
  */
-type FunctionHandler = (context: ContextInterface, next: () => void) => void;
+export type FunctionHandler = (
+  context: ContextInterface,
+  next: () => void
+) => void;
 
 /**
  *
@@ -39,8 +42,8 @@ export class ContextHandelerAdapter implements ContextHandlerInterface {
   }
   handle(routingContext: RoutingContext<ContextInterface>): void {
     /// handle parameter passing
-    routingContext.context.request.params = {
-      ...routingContext.context.request.params,
+    routingContext.context.req.params = {
+      ...routingContext.context.req.params,
       ...routingContext.params,
     };
     this.#handeler(routingContext.context, () =>
@@ -101,7 +104,7 @@ export class RoutingContextFactory
     ctx: ContextInterface
   ): RoutingContext<ContextInterface> {
     let method;
-    switch (ctx.request.method) {
+    switch (ctx.req.method) {
       case "get":
       case "Get":
       case "GET":
@@ -130,7 +133,7 @@ export class RoutingContextFactory
       default:
         throw "Unknown http method";
     }
-    let url = new URL(ctx.request.url);
+    let url = new URL(ctx.req.url);
     return new RoutingContext<ContextInterface>(ctx, url, method);
   }
 }

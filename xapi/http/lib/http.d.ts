@@ -88,43 +88,4 @@ export interface XapiRequestInterface {
   readonly body: string | Uint8Array | null | {[key: string]: any};
 }
 
-export interface XapiResponseInterface {
-  /**
-   *
-   * @param status set the status code of the response to sent
-   * @returns
-   */
-  withStatusCode(status: number): XapiResponseInterface;
-  /**
-   *
-   * @param headers add headers to the response to sent, typical are the cokie headers
-   * @returns
-   */
-  withHeaders(headers: {[key: string]: string}): XapiResponseInterface;
-  /**
-   *
-   * @param body Add the body of the request
-   * @returns
-   */
-  withBody(body: BodyInit): XapiResponseInterface;
-  /**
-   *
-   * @param text Add the status text of the response
-   * @returns
-   */
-  withStatusText(text: string): XapiResponseInterface;
-
-  /**
-   * end the response and sent it. After you call end you can not sent any response
-   */
-  end(): Promise<void>;
-  /**
-   * Endable
-   * @param content
-   */
-  send(body: BodyInit | null | undefined, init: ResponseInit): Promise<void>;
-
-  redirect(url: string): Promise<void>;
-
-  json(content: {}): Promise<void>;
-}
+export interface XapiResponseInterface {}

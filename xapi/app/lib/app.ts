@@ -1,5 +1,9 @@
 import {Router, RoutingContextFactory} from "./router.ts";
 import {Context} from "./context.ts";
+import {
+  TemplateParams,
+  TemplateRenderInterface,
+} from "./template/render_engine.ts";
 
 /**
  * Web application instance
@@ -8,6 +12,15 @@ import {Context} from "./context.ts";
 export class Application extends Router {
   private port?: number;
   private listener: Deno.Listener | undefined;
+  #engine: TemplateRenderInterface | undefined;
+
+  setViewEngine(engine: TemplateRenderInterface) {
+    this.#engine = engine;
+  }
+
+  async renderView(path: string, params: TemplateParams): Promise<string> {
+    return await this.#engine!.renderView(path, params);
+  }
 
   /**
    *  constructor of the app
@@ -18,7 +31,7 @@ export class Application extends Router {
 
   async listen(port?: number): Promise<void> {
     this.completeMiddlewareWith(async (ctx, next) => {
-      await ctx.response.withStatusCode(404).withBody("Not found").end();
+      await ctx.res.status(404).body("Not found").end();
     });
 
     const routingContextFactory = new RoutingContextFactory();
@@ -32,7 +45,7 @@ export class Application extends Router {
         this.handler
           .handle(
             routingContextFactory.createRoutingContextFrom(
-              new Context(requestEvent)
+              new Context(requestEvent, this)
             )
           )
           .catch((reason) => {

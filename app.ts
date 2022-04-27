@@ -1,11 +1,9 @@
-import { Router } from "./xapi/router/router.ts";
-import Application from "./xapi/app/application.ts";
-import { ServerRequest } from "https://deno.land/std@0.104.0/http/server.ts";
-import { HttpContext } from "./xapi/http/http.lib.ts";
+import {ServerRequest} from "https://deno.land/std@0.104.0/http/server.ts";
+import {HttpContext} from "./xapi/http/http.lib.ts";
 import Session from "./xapi/session/session.ts";
-import { FileSessionAdapter } from "./xapi/session/adapter.ts";
-import { SessionContextInterface } from "./xapi/session/session.ts";
-import { InMemorySessionAdapter } from "./xapi/session/adapter.ts";
+import {FileSessionAdapter} from "./xapi/session/adapter.ts";
+import {SessionContextInterface} from "./xapi/session/session.ts";
+import {InMemorySessionAdapter} from "./xapi/session/adapter.ts";
 import BodyParser from "./xapi/parser/bodyparser.ts";
 const app = new Application();
 
@@ -18,7 +16,7 @@ usersRouter.use((ctx: HttpContext, next: Function) => {
 usersRouter.get("/", (ctx: HttpContext, next: Function) => {
   console.log(
     "getting 2021 on session ",
-    (ctx as SessionContextInterface).session?.get("acmy"),
+    (ctx as SessionContextInterface).session?.get("acmy")
   );
   ctx.response.send("this is users router");
 });
@@ -82,7 +80,7 @@ app.use(
     secret: "secret",
     adapter: new InMemorySessionAdapter(),
     lifetime: 2000,
-  }),
+  })
 );
 app.use((ctx: HttpContext, next: Function) => {
   next();
@@ -91,7 +89,7 @@ app.use((ctx: HttpContext, next: Function) => {
   console.log(ctx.request.url);
   console.log(
     "getting 2021 on session as ",
-    (ctx as SessionContextInterface).session?.get("acmy"),
+    (ctx as SessionContextInterface).session?.get("acmy")
   );
   next();
 });
