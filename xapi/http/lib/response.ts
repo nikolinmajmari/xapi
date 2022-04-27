@@ -58,42 +58,42 @@ export class XapiResponse {
   /**
    * headers update methods
    */
-  applicationJavascript() {
+  asApplicationJavascript() {
     this.response.headers?.append("Content-type", "application/javascript");
     return this;
   }
 
-  applicationPdf() {
+  asApplicationPdf() {
     this.response.headers?.append("Content-type", "application/pdf");
     return this;
   }
 
-  applicationJson() {
+  asApplicationJson() {
     this.response.headers?.append("Content-Type", "application/json");
     return this;
   }
 
-  textHtml() {
+  asTextHtml() {
     this.response.headers?.append("Content-type", "text/html");
     return this;
   }
 
-  textCss() {
+  asTextCss() {
     this.response.headers?.append("Content-type", "text/css");
     return this;
   }
 
-  imageGif() {
+  asImageGif() {
     this.response.headers?.append("Content-type", "image/gif");
     return this;
   }
 
-  imageJPEG() {
+  asImageJPEG() {
     this.response.headers?.append("Content-type", "image/jpeg");
     return this;
   }
 
-  location(url: string) {
+  asLocation(url: string) {
     this.response.headers?.append("Location", url);
     return this;
   }
@@ -170,7 +170,7 @@ export class XapiResponse {
    * @param url
    */
   async redirect(url: string): Promise<void> {
-    await this.found().location(url).sentResponse();
+    await this.found().asLocation(url).sentResponse();
   }
 
   /**
@@ -179,7 +179,7 @@ export class XapiResponse {
    */
   async json(content: {}): Promise<void> {
     await this.ok()
-      .applicationJson()
+      .asApplicationJson()
       .body(JSON.stringify(content))
       .sentResponse();
   }
@@ -193,7 +193,7 @@ export class XapiResponse {
   }
 
   async html(content: string): Promise<void> {
-    await this.ok().textHtml().text(content);
+    await this.ok().asTextHtml().text(content);
   }
 
   /**

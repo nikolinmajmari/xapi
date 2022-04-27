@@ -14,6 +14,6 @@ export class ContextResponse extends XapiResponse {
 
   async render(path: string, params: TemplateParams = {}) {
     const result = await this.#ctx.app.renderView(path, params);
-    return await this.body(result).textHtml().ok().end();
+    return await this.body(result).asTextHtml().ok().end();
   }
 }

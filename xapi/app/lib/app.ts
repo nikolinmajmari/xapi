@@ -39,19 +39,49 @@ export class Application extends Router {
     console.log(
       `HTTP webserver running.  Access it at:  http://localhost:${port}/`
     );
-    for await (const conn of server) {
-      const httpConn = Deno.serveHttp(conn);
-      for await (const requestEvent of httpConn) {
-        this.handler
-          .handle(
-            routingContextFactory.createRoutingContextFrom(
-              new Context(requestEvent, this)
-            )
-          )
-          .catch((reason) => {
-            console.log(reason);
-          });
+
+    while (true) {
+      try {
+        const conn = await server.accept();
+        (async () => {
+          const httpConn = Deno.serveHttp(conn);
+          while (true) {
+            try {
+              const requestEvent = await httpConn.nextRequest();
+              if (requestEvent != null) {
+                await this.handler.handle(
+                  routingContextFactory.createRoutingContextFrom(
+                    new Context(requestEvent, this)
+                  )
+                );
+              }
+            } catch (err) {
+              // the connection has finished
+              break;
+            }
+          }
+        })();
+      } catch (err) {
+        // The listener has closed
+        break;
       }
+    }
+    while (true) {
+      const conn = await server.accept();
+      (async () => {
+        const httpConn = Deno.serveHttp(conn);
+        for await (const requestEvent of httpConn) {
+          this.handler
+            .handle(
+              routingContextFactory.createRoutingContextFrom(
+                new Context(requestEvent, this)
+              )
+            )
+            .catch((reason) => {
+              console.log(reason);
+            });
+        }
+      })();
     }
   }
 }
