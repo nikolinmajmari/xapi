@@ -31,7 +31,7 @@ export class Application extends Router {
 
   async listen(port?: number): Promise<void> {
     this.completeMiddlewareWith(async (ctx, next) => {
-      await ctx.res.status(404).body("Not found").end();
+      await ctx.res.status(404).body("Not found").sent();
     });
 
     const routingContextFactory = new RoutingContextFactory();

@@ -38,7 +38,7 @@ export class RegexChainHandler implements ContextHandlerInterface {
     //console.log("base route :", this.baseRoute.pattern);
   }
 
-  handle(context: RoutingContextInterface) {
+  async handle(context: RoutingContextInterface): Promise<void> {
     const url = context.path;
     if (this.baseRoute?.isPrefixMatch(url)) {
       if (this.param != "" && this.param != undefined) {
@@ -49,9 +49,9 @@ export class RegexChainHandler implements ContextHandlerInterface {
           ...context.params,
         };
       }
-      this.handler?.handle(context);
+      return await this.handler?.handle(context);
     } else if (this.successor != undefined) {
-      this.successor.handle(context);
+      return await this.successor.handle(context);
     } else {
       throw "Not handled middleware";
     }

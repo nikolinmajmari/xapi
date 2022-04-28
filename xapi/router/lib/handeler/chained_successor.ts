@@ -7,15 +7,15 @@ import {LayerHandler} from "./layer_handeler.ts";
  *
  */
 export class ChainedSuccessor implements ContextHandlerInterface {
-  handle(context: RoutingContextInterface): void {
+  async handle(context: RoutingContextInterface): Promise<void> {
     if (this.layer?.getRoute()?.isStrictMatch(context.path)) {
       const handeler = this.methodSuccessors.get(context.method);
       if (handeler != undefined) {
-        return handeler.handle(context);
+        return await handeler.handle(context);
       }
     }
     if (this.successor != undefined) {
-      this.successor.handle(context);
+      return await this.successor.handle(context);
     } else {
       throw "Error";
     }

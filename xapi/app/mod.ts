@@ -8,3 +8,6 @@ import etaEngine from "./lib/template/eta.ts";
 const engines = {etaEngine};
 export {engines};
 export {staticMiddleware};
+
+import manager, {FileManager} from "./lib/file_manager.ts";
+export {manager as xapiDefaultFileManager, FileManager};

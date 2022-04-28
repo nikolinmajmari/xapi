@@ -136,7 +136,7 @@ export class LayerHandler implements LayerInterface, ContextHandlerInterface {
     }
   }
 
-  async handle(context: RoutingContextInterface) {
+  async handle(context: RoutingContextInterface): Promise<void> {
     const strict = this.route?.isStrictMatch(context.path) ?? false;
     if (strict) {
       let start = 0;
@@ -149,19 +149,19 @@ export class LayerHandler implements LayerInterface, ContextHandlerInterface {
         }
       }
       if (start < this.handelers.length) {
-        this.handelers[start].handle(context);
+        return await this.handelers[start].handle(context);
       } else if (this.successor != null) {
-        await this.successor.handle(context);
+        return await this.successor.handle(context);
       }
     } else {
       //console.log(this.handelers);
       for (let i = 0; i < this.handelers.length; i++) {
         if (this.methods[i] == HttpMethod.ALL) {
-          return this.handelers[i].handle(context);
+          return await this.handelers[i].handle(context);
         }
       }
       if (this.successor != null) {
-        this.successor.handle(context);
+        return await this.successor.handle(context);
       } else {
         throw "Not handler middleware";
       }
@@ -325,7 +325,7 @@ export class LayerHandler implements LayerInterface, ContextHandlerInterface {
     //  console.log("chaining middleware for ", this.handelers);
   }
 
-  async invokeSuccessor(context: RoutingContextInterface) {
+  async invokeSuccessor(context: RoutingContextInterface): Promise<void> {
     if (this.successor != null) {
       await this.successor.handle(context);
     }

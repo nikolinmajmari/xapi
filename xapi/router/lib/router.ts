@@ -2,7 +2,10 @@ import {RoutingContext} from "./context.ts";
 import {ContextHandlerInterface} from "./handeler/handelers.ts";
 import {Router as XapiRouter} from "./xapi_router.ts";
 
-type BaseFunctionHandler<T> = (context: T, next: () => void) => void;
+type BaseFunctionHandler<T> = (
+  context: T,
+  next: () => Promise<void>
+) => Promise<void>;
 const defaultAdapterCreater = <C, F extends Function>(item: F) =>
   new ContextHandelerAdapter<C, F>(item);
 export class ContextHandelerAdapter<
@@ -15,17 +18,18 @@ export class ContextHandelerAdapter<
   constructor(handeler: F) {
     this.#handeler = handeler;
   }
-  handle(routingContext: RoutingContext<C>): void {
-    this.#handeler(routingContext.context, () =>
-      this.invokeSucessor(routingContext)
+  async handle(routingContext: RoutingContext<C>): Promise<void> {
+    await this.#handeler(
+      routingContext.context,
+      async () => await this.invokeSucessor(routingContext)
     );
   }
   setSuccessor(successor: ContextHandlerInterface): void {
     this.#sucessor = successor;
   }
-  invokeSucessor(routingContext: RoutingContext<C>) {
+  async invokeSucessor(routingContext: RoutingContext<C>) {
     if (this.#sucessor != undefined) {
-      this.#sucessor?.handle(routingContext);
+      await this.#sucessor?.handle(routingContext);
     } else {
       throw "sucessor not found for this middleware on " + this;
     }

@@ -40,16 +40,16 @@ export class ChainHandler implements ContextHandlerInterface {
     }
   }
 
-  handle(context: RoutingContextInterface) {
+  async handle(context: RoutingContextInterface): Promise<void> {
     const pattern = this.baseRoute?.isRegex
       ? new RegExp(this.baseRoute?.pattern)
       : this.baseRoute?.pattern;
     const key = context.path.replace(pattern ?? "", "").split("/")[0];
     const handler = this.routes.get(key) ?? this.successor;
     if (handler != null) {
-      handler.handle(context);
+      await handler.handle(context);
     } else if (this.successor != null) {
-      this.successor.handle(context);
+      await this.successor.handle(context);
     } else {
       throw "Not handled middleware" + this.successor;
     }

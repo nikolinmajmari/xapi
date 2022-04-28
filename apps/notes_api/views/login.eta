@@ -6,12 +6,12 @@
       integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
       crossorigin="anonymous"
     />
-    <link href="/css/style.css" rel="stylesheet" type="text/css"/>
+    <link href="/assets/css/style.css" rel="stylesheet" type="text/css"/>
   </head>
   <body>
     <div class="container-fluid">
     <div class="form-container">
-        <form method="post" action="/auth/login">
+        <form method="post" action="/auth/login" enctype="multipart/form-data">
         <div class="bd-example">
           <div class="mb-3">
             <label for="username" class="form-label">
@@ -37,6 +37,17 @@
               placeholder="*******""
             />
           </div>
+          <div class="mb-3">
+            <label for="licence" class="form-label">
+              Licence
+            </label>
+            <input
+              type="file"
+              class="form-control"
+              id="licence"
+              name="licence"
+            />
+          </div>
         </div>
         <button type="submit">
           submit
@@ -49,6 +60,6 @@
       integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
       crossorigin="anonymous"
     ></script>
-    <script src="/js/app.js"></script>
+    <script src="/assets/js/app.js"></script>
   </body>
 </html>

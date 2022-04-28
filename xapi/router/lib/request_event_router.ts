@@ -40,9 +40,9 @@ export class ContextHandelerAdapter implements ContextHandlerInterface {
   constructor(handeler: BaseFunctionHandler) {
     this.#handeler = handeler;
   }
-  handle(routingContext: RoutingContext<Context>): void {
+  async handle(routingContext: RoutingContext<Context>): Promise<void> {
     routingContext.context.params = routingContext.params;
-    this.#handeler(routingContext.context, () =>
+    await this.#handeler(routingContext.context, () =>
       this.invokeSucessor(routingContext)
     );
   }

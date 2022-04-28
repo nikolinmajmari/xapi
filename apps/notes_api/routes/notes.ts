@@ -16,6 +16,10 @@ router.get("/", async (ctx, next) => {
   await ctx.res.json(db);
 });
 
+router.get("/new", async (ctx, next) => {
+  await ctx.res.html("hey papa papa");
+});
+
 /**
  * return a specific note
  */
@@ -56,7 +60,7 @@ router.patch("/:id(\\d+)", async (ctx, next) => {
     if (typeof json.content == "string") {
       note.content = json.content ?? note.content;
     }
-    ctx.res.body("200").end();
+    ctx.res.body("200").sent();
   }
   next();
 });
@@ -68,7 +72,7 @@ router.delete("/:id(\\d+)", async (ctx, next) => {
   const note = db.find((val) => val.id == ctx.req.params.id);
   if (note != undefined) {
     db = db.filter((val) => val.id != ctx.req.params.id);
-    return await ctx.res.body("200").end();
+    return await ctx.res.body("200").sent();
   }
   next();
 });

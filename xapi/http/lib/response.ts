@@ -30,7 +30,7 @@ export class XapiResponse {
   }
 
   /**
-   *
+   * set status of the response
    * @param status
    * @returns
    */
@@ -44,7 +44,7 @@ export class XapiResponse {
   }
 
   /**
-   *
+   * set headers of the response
    * @param headers
    * @returns
    */
@@ -56,50 +56,7 @@ export class XapiResponse {
   }
 
   /**
-   * headers update methods
-   */
-  asApplicationJavascript() {
-    this.response.headers?.append("Content-type", "application/javascript");
-    return this;
-  }
-
-  asApplicationPdf() {
-    this.response.headers?.append("Content-type", "application/pdf");
-    return this;
-  }
-
-  asApplicationJson() {
-    this.response.headers?.append("Content-Type", "application/json");
-    return this;
-  }
-
-  asTextHtml() {
-    this.response.headers?.append("Content-type", "text/html");
-    return this;
-  }
-
-  asTextCss() {
-    this.response.headers?.append("Content-type", "text/css");
-    return this;
-  }
-
-  asImageGif() {
-    this.response.headers?.append("Content-type", "image/gif");
-    return this;
-  }
-
-  asImageJPEG() {
-    this.response.headers?.append("Content-type", "image/jpeg");
-    return this;
-  }
-
-  asLocation(url: string) {
-    this.response.headers?.append("Location", url);
-    return this;
-  }
-
-  /**
-   *
+   * Set body of the response
    * @param body
    * @returns
    */
@@ -109,7 +66,7 @@ export class XapiResponse {
   }
 
   /**
-   *
+   * set statustext of the response
    * @param text
    * @returns
    */
@@ -119,32 +76,51 @@ export class XapiResponse {
   }
 
   /**
-   *
+   * set content type to "application/javascript"
+   * @returns this
    */
-  protected async sentResponse() {
-    if (this.#sent == false) {
-      this.#sent = true;
-      await this.#event.respondWith(
-        new Response(this.response.body, {
-          headers: this.response.headers,
-          status: this.response.status,
-          statusText: this.response.statusText,
-        })
-      );
-    } else {
-      throw "Response already sented";
-    }
+  contentTypeApplJS() {
+    this.response.headers?.append("Content-type", "application/javascript");
+    return this;
+  }
+
+  contentTypeApplPdf() {
+    this.response.headers?.append("Content-type", "application/pdf");
+    return this;
+  }
+
+  contentTypeApplJson() {
+    this.response.headers?.append("Content-Type", "application/json");
+    return this;
+  }
+
+  contentTypeTextHtml() {
+    this.response.headers?.append("Content-type", "text/html");
+    return this;
+  }
+
+  contentTypeTextCss() {
+    this.response.headers?.append("Content-type", "text/css");
+    return this;
+  }
+
+  contentTypeImageGiff() {
+    this.response.headers?.append("Content-type", "image/gif");
+    return this;
+  }
+
+  contentTypeImageJPEG() {
+    this.response.headers?.append("Content-type", "image/jpeg");
+    return this;
+  }
+
+  location(url: string) {
+    this.response.headers?.append("Location", url);
+    return this;
   }
 
   /**
-   * end the response and sent it. After you call end you can not sent any response
-   */
-  async end(): Promise<void> {
-    return await this.sentResponse();
-  }
-
-  /**
-   * Endable
+   * Sent the response
    * @param content
    */
   async sent(
@@ -166,154 +142,175 @@ export class XapiResponse {
   }
 
   /**
-   *
+   * Sent response as download resposne
+   * @param body
+   */
+  async download(body: ReadableStream<Uint8Array>) {
+    this.response.headers?.append("Content-Disposition", "attachment");
+    await this.body(body).sent();
+  }
+
+  /**
+   * Sent a redirect response
    * @param url
    */
   async redirect(url: string): Promise<void> {
-    await this.found().asLocation(url).sentResponse();
+    await this.statusFound().location(url).sent();
   }
 
   /**
-   *
+   * Sent a json response
    * @param content Json ttype
    */
   async json(content: {}): Promise<void> {
-    await this.ok()
-      .asApplicationJson()
+    await this.statusOk()
+      .contentTypeApplJS()
       .body(JSON.stringify(content))
-      .sentResponse();
+      .sent();
   }
 
   /**
-   *
+   * Sent a plain text response
    */
   async text(content: string): Promise<void> {
-    this.ok();
-    await this.#event.respondWith(new Response(content, this.response));
+    await this.statusOk().body(content).sent();
   }
 
+  async stream(content: ReadableStream): Promise<void> {
+    await this.statusOk().body(content).sent();
+  }
+
+  /**
+   * Sent html text as responsr
+   * @param content
+   */
   async html(content: string): Promise<void> {
-    await this.ok().asTextHtml().text(content);
+    await this.statusOk().contentTypeTextHtml().body(content).sent();
   }
 
   /**
    * set http status codes
    */
-  ok() {
+
+  /**
+   * Set http status code to 200 and status text to ok
+   * @returns this
+   */
+  statusOk() {
     this.response.status = 200;
     this.response.statusText = "success";
     return this;
   }
 
-  created() {
+  statusCreated() {
     this.response.status = 201;
     this.response.statusText = "created";
     return this;
   }
 
-  accepted() {
+  statusAccepted() {
     this.response.status = 202;
     this.response.statusText = "accepted";
     return this;
   }
 
-  movedPermanently() {
+  statusMovedPermanently() {
     this.response.status = 301;
     this.response.statusText = "Moved Permanently";
     return this;
   }
 
-  found() {
+  statusFound() {
     this.response.status = 302;
     this.response.statusText = "Found";
     return this;
   }
 
-  seeOther() {
+  statusSeeOther() {
     this.response.status = 303;
     this.response.statusText = "See Other";
     return this;
   }
 
-  notModified() {
+  statusNotModified() {
     this.response.status = 304;
     this.response.statusText = "Moved Permanently";
     return this;
   }
 
-  badRequest() {
+  statusBadRequest() {
     this.response.status = 400;
     this.response.statusText = "Bad Request";
     return this;
   }
 
-  unauthorized() {
+  statusUnauthorized() {
     this.response.status = 401;
     this.response.statusText = "Unauthorized";
     return this;
   }
 
-  forbidden() {
+  statusForbidden() {
     this.response.status = 403;
     this.response.statusText = "Forbidden";
     return this;
   }
 
-  notFound() {
+  statusNotFound() {
     this.response.status = 404;
     this.response.statusText = "Not Found";
     return this;
   }
 
-  methodNotAllowed() {
+  statusMethodNotAllowed() {
     this.response.status = 405;
     this.response.statusText = "Method Not Allowed";
     return this;
   }
 
-  notAcceptable() {
+  statusNotAcceptable() {
     this.response.status = 406;
     this.response.statusText = "Not Acceptable";
     return this;
   }
 
-  requestTimeout() {
+  statusRequestTimeout() {
     this.response.status = 408;
     this.response.statusText = "Request Timeout";
     return this;
   }
 
-  conflict() {
+  statusConflict() {
     this.response.status = 409;
     this.response.statusText = "Conflict";
     return this;
   }
 
-  gone() {
+  statusGone() {
     this.response.status = 410;
     this.response.statusText = "Gone";
     return this;
   }
 
-  lengthRequired() {
+  statusLengthRequired() {
     this.response.status = 411;
     this.response.statusText = "Length Required";
     return this;
   }
 
-  payloadTooLarge() {
+  statusPayloadTooLarge() {
     this.response.status = 413;
     this.response.statusText = "Payload Too Large";
     return this;
   }
 
-  ineralServerError() {
+  statusIneralServerError() {
     this.response.status = 500;
     this.response.statusText = "Ineral Server Error";
     return this;
   }
 
-  serverUnavailable() {
+  statusServerUnavailable() {
     this.response.status = 503;
     this.response.statusText = "Service Unavailable";
     return this;

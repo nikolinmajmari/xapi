@@ -14,8 +14,8 @@ import {ContextInterface} from "./context.ts";
  */
 export type FunctionHandler = (
   context: ContextInterface,
-  next: () => void
-) => void;
+  next: () => Promise<void>
+) => Promise<void>;
 
 /**
  *
@@ -40,22 +40,27 @@ export class ContextHandelerAdapter implements ContextHandlerInterface {
   constructor(handeler: FunctionHandler) {
     this.#handeler = handeler;
   }
-  handle(routingContext: RoutingContext<ContextInterface>): void {
+  async handle(
+    routingContext: RoutingContext<ContextInterface>
+  ): Promise<void> {
     /// handle parameter passing
     routingContext.context.req.params = {
       ...routingContext.context.req.params,
       ...routingContext.params,
     };
-    this.#handeler(routingContext.context, () =>
-      this.invokeSucessor(routingContext)
+    await this.#handeler(
+      routingContext.context,
+      async () => await this.invokeSucessor(routingContext)
     );
   }
   setSuccessor(successor: ContextHandlerInterface): void {
     this.#sucessor = successor;
   }
-  invokeSucessor(routingContext: RoutingContext<ContextInterface>) {
+  async invokeSucessor(
+    routingContext: RoutingContext<ContextInterface>
+  ): Promise<void> {
     if (this.#sucessor != undefined) {
-      this.#sucessor?.handle(routingContext);
+      await this.#sucessor?.handle(routingContext);
     } else {
       throw "sucessor not found for this middleware on " + this;
     }
