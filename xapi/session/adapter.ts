@@ -4,12 +4,6 @@ export interface SessionAdapterInterface {
 }
 
 export class InMemorySessionAdapter implements SessionAdapterInterface {
-  loadMany(sessionid: string): Map<string, string> {
-    throw new Error("Method not implemented.");
-  }
-  storeMany(sessionid: string, data: Map<string, string>): void {
-    throw new Error("Method not implemented.");
-  }
   private sessionData: Map<string, string> = new Map();
   load(key: string): string | null {
     let data = this.sessionData.get(key);
