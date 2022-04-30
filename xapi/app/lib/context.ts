@@ -10,6 +10,7 @@ import {Application} from "./app.ts";
 export interface ContextInterface {
   req: ContextRequest;
   res: ContextResponse;
+  attribs: {[key: string]: any};
 }
 
 /**
@@ -35,4 +36,5 @@ export class Context implements ContextInterface {
   }
   req: ContextRequest;
   res: ContextResponse;
+  attribs = {};
 }

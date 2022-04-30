@@ -9,5 +9,7 @@ const engines = {etaEngine};
 export {engines};
 export {staticMiddleware};
 
+export {XapiFormDataFiles} from "./lib/file.ts";
+
 import manager, {FileManager} from "./lib/file_manager.ts";
 export {manager as xapiDefaultFileManager, FileManager};

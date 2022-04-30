@@ -3,7 +3,7 @@ import {
   getCookies as getcookies,
   setCookie as setcookie,
 } from "https://deno.land/std@0.105.0/http/cookie.ts";
-import { HttpRequest, HttpResponse } from "../http/http.lib.ts";
+import {XapiRequest, XapiResponse} from "../http/mod.ts";
 export class HttpCookie implements cookie {
   name: string;
   /** Value of the cookie. */
@@ -21,7 +21,7 @@ export class HttpCookie implements cookie {
   /** Indicates that cookie is not accessible via JavaScript. **/
   httpOnly?: boolean;
   /** Allows servers to assert that a cookie ought not to
-       * be sent along with cross-site requests. */
+   * be sent along with cross-site requests. */
   sameSite?: "Strict" | "Lax" | "None";
   /** Additional key value pairs with the form "key=value" */
   unparsed?: string[];
@@ -31,10 +31,13 @@ export class HttpCookie implements cookie {
   }
 }
 
-export function getCookies(request: HttpRequest) {
-  return getcookies(request.requestEvent.request);
+export function getCookies(request: XapiRequest) {
+  return getcookies(request);
 }
 
-export function setCookie(response: HttpResponse, cookie: HttpCookie) {
-  return setcookie(response, cookie);
+export function setCookie(response: XapiResponse, cookie: HttpCookie) {
+  const resInit = {headers: new Headers()};
+  setcookie(resInit, cookie);
+  console.log(resInit);
+  response.headers({"set-cookie": resInit.headers.get("set-cookie")});
 }

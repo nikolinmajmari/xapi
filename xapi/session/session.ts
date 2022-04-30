@@ -1,77 +1,91 @@
-import { HttpContext, HttpContextInterface } from "../http/http.lib.ts";
-import { getCookies, HttpCookie, setCookie } from "./cookie.ts";
+import {Context, ContextInterface} from "../app/mod.ts";
+import {getCookies, HttpCookie, setCookie} from "./cookie.ts";
+import {SessionAdapterInterface} from "./adapter.ts";
+import {FunctionHandler} from "../app/lib/router.ts";
 
 const SESSION_ID_KEY = "xapi_session_id";
-import { ServerRequest } from "https://deno.land/std@0.105.0/http/server.ts";
-import { SessionAdapterInterface } from "./adapter.ts";
 
-var session: Session<SessionAdapterInterface>;
-
-var generator = (old = null) => {
-  return "_" + Math.random().toString(36).substr(2, 36);
+const generator = (_old = null) => {
+  return "_" + Math.random().toString(36);
 };
 
-export interface SessionContextInterface extends HttpContextInterface {
-  session?: RequestSession;
-}
+export class SessionProvider {
+  #adapter: SessionAdapterInterface;
+  #secret: string;
+  constructor(config: {
+    adapter: SessionAdapterInterface;
+    lifetime: number;
+    secret: string;
+  }) {
+    this.#adapter = config.adapter;
+    this.#secret = config.secret;
+  }
 
-class SessionContext extends HttpContext implements SessionContextInterface {
-  session?: RequestSession;
-  static createSession<T extends SessionAdapterInterface=SessionAdapterInterface>(
-    params: { secret: string; adapter: T; lifetime: number },
-  ) {
-    session = new Session<T>(params);
-    return (ctx: SessionContext, next: Function) => {
-      let sessionId = null;
-      let cookies = getCookies((ctx as HttpContext).request);
-      sessionId = cookies.secret;
-      if (sessionId == undefined || session == null) {
-        sessionId = generator();
-        let cookie: HttpCookie = new HttpCookie("secret", sessionId);
-        setCookie((ctx as HttpContextInterface).response, cookie);
+  of(ctx: ContextInterface): RequestSession | undefined {
+    return (ctx as unknown as SessionContext).session;
+  }
+
+  inject(): FunctionHandler {
+    return async (ctx, next) => {
+      try {
+        const cookies = getCookies(ctx.req);
+        let sessionId: string | undefined = cookies[SESSION_ID_KEY];
+        if (sessionId == undefined) {
+          sessionId = generator();
+        }
+        console.log("sessionid", sessionId);
+        (ctx as SessionContext).session = new RequestSession(
+          this.#adapter,
+          sessionId
+        );
+        setCookie(ctx.res, new HttpCookie(SESSION_ID_KEY, sessionId));
+      } catch (e) {
+        console.log("session could not be injected", e.toString());
       }
-      ctx.session = new RequestSession(sessionId);
-      next();
+      await next();
     };
   }
 }
 
-class Session<T extends SessionAdapterInterface> {
-  private secret?: string = SESSION_ID_KEY;
-  private adapter?: T;
-  private lifetime?: number = 1000;
-  constructor(params: { secret: string; adapter: T; lifetime: number }) {
-    this.secret = params.secret;
-    this.adapter = params.adapter;
-    this.lifetime = params.lifetime;
+export class RequestSession {
+  #adapter: SessionAdapterInterface;
+  #id: string;
+  #store: any = undefined;
+  get id(): string {
+    return this.#id;
   }
-  get(key: string): string | null {
-    return this.adapter?.load(key) ?? null;
+  constructor(adapter: SessionAdapterInterface, id: string) {
+    this.#adapter = adapter;
+    this.#id = id;
   }
-  set(key: string, value: string): void {
-    return this.adapter?.store(key, value);
+
+  async set(key: string, value: string, flush: boolean = false): Promise<void> {
+    if (this.#store == undefined) {
+      this.#store = await this.#adapter.load(this.#id);
+    }
+    this.#store[key] = value;
+    if (flush) {
+      this.flush();
+    }
+  }
+
+  async get(key: string): Promise<any> {
+    if (this.#store == undefined) {
+      let str = await this.#adapter.load(this.#id);
+      if (str == "") {
+        str = "{}";
+      }
+      console.log("to json", str);
+      this.#store = JSON.parse(str ?? "{}");
+    }
+    return this.#store[key];
+  }
+
+  async flush() {
+    await this.#adapter.store(this.#id, JSON.stringify(this.#store));
   }
 }
 
-class RequestSession implements SessionInterface {
-  private sessionId: string;
-  constructor(sessionId: string) {
-    this.sessionId = sessionId;
-  }
-  get(key: string): string | null {
-    return session.get(this.sessionId + key);
-  }
-  set(key: string, value: string): void {
-    return session.set(this.sessionId + key, value);
-  }
-  getSessionId() {
-    return this.sessionId;
-  }
+export class SessionContext extends Context {
+  session: RequestSession | undefined;
 }
-
-export interface SessionInterface {
-  get(key: string): string | null;
-  set(key: string, value: string): void;
-}
-
-export default SessionContext.createSession;

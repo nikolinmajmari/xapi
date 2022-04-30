@@ -14,10 +14,10 @@ export type BodyType =
   | Uint8Array;
 
 export interface ParsableBodyInterface {
-  parseJson(): Promise<void>;
-  parseForm(): Promise<void>;
-  parseMultipartFormData(): Promise<void>;
-  parseText(): Promise<void>;
+  parseJson(): Promise<JsonType>;
+  parseForm(): Promise<URLSearchParams>;
+  parseMultipartFormData(): Promise<FormDataBody>;
+  parseText(): Promise<string | null>;
   get json(): JsonType;
   get form(): URLSearchParams;
   get formData(): FormDataBody;
@@ -48,21 +48,24 @@ export default class RequestBody implements ParsableBodyInterface {
   /**
    * parse request body  to json
    */
-  async parseJson(): Promise<void> {
+  async parseJson(): Promise<JsonType> {
     const reader = this.#source?.getReader();
     const data = await reader?.read();
     const value = data?.value;
     const jsonString = new TextDecoder().decode(value);
     if (jsonString != null && jsonString != "") {
       this.#json = JSON.parse(new TextDecoder().decode(value));
+      return this.#json;
     }
+    throw "No content type to parse JSON";
   }
-  async parseForm(): Promise<void> {
+  async parseForm(): Promise<URLSearchParams> {
     this.#form = new URLSearchParams(
       decoder.decode(await this.uint8Array()).replace(/\+/g, " ")
     );
+    return this.#form;
   }
-  async parseMultipartFormData(): Promise<void> {
+  async parseMultipartFormData(): Promise<FormDataBody> {
     const contentType = this.#headers.get("content-type");
     const readableStream = this.#source?.getReader();
     if (contentType != null && readableStream != undefined) {
@@ -71,13 +74,16 @@ export default class RequestBody implements ParsableBodyInterface {
         readerFromStreamReader(readableStream)
       );
       this.#formData = await reader.read();
+      return this.#formData;
     }
+    throw "No Body Detected";
   }
-  async parseText(): Promise<void> {
+  async parseText(): Promise<string | null> {
     const reader = this.#source?.getReader();
     const data = await reader?.read();
     const value = data?.value;
     this.#text = decoder.decode(value);
+    return this.#text;
   }
   get json(): JsonType {
     return this.#json;

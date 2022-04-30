@@ -28,7 +28,6 @@ export class XapiResponse {
   get init() {
     return this.response;
   }
-
   /**
    * set status of the response
    * @param status
@@ -48,7 +47,8 @@ export class XapiResponse {
    * @param headers
    * @returns
    */
-  headers(headers: {[key: string]: string}) {
+  headers(headers: {[key: string]: any}) {
+    console.log("etting headers", headers);
     for (const key in headers) {
       this.response.headers?.append(key, headers[key]);
     }
@@ -130,6 +130,7 @@ export class XapiResponse {
     if (this.#sent) {
       throw "Response is already sent";
     }
+    console.log(this.response.headers);
     await this.#event.respondWith(
       new Response(body, {
         headers: this.response.headers,

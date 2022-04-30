@@ -1,26 +1,6 @@
 export interface SessionAdapterInterface {
-  load(key: string): string | null;
-  store(key: string, value: string): void;
-  load(sessionid: string, key: string): string | null;
-  store(sessionid: string, key: string): void;
-  loadMany(sessionid: string): Map<string, string> | undefined;
-  storeMany(sessionid: string, data: Map<string, string>): void;
-}
-
-export class FileSessionAdapter implements SessionAdapterInterface {
-  loadMany(sessionid: string): Map<string, string> {
-    throw new Error("Method not implemented.");
-  }
-  storeMany(sessionid: string, data: Map<string, string>): void {
-    throw new Error("Method not implemented.");
-  }
-
-  load(key: string): string {
-    throw new Error("Method not implemented.");
-  }
-  store(key: string, value: string): void {
-    throw new Error("Method not implemented.");
-  }
+  load(key: string): string | Promise<string | null> | null;
+  store(key: string, value: any): void;
 }
 
 export class InMemorySessionAdapter implements SessionAdapterInterface {
