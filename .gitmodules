@@ -1,0 +1,6 @@
+[submodule "apps/notes-app/xapi-notesapp"]
+	path = apps/notes-app/xapi-notesapp
+	url = https://github.com/nikolinmajmari/xapi-notesapp.git
+[submodule "apps/xapi-notesapp"]
+	path = apps/xapi-notesapp
+	url = https://github.com/nikolinmajmari/xapi-notesapp.git
