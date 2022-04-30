@@ -1,5 +1,9 @@
+
+/**
+ * Each class that represents an authenticable instance must have a username property 
+ */
 export  interface AuthenticableInterface{
-     readonly username:string;
+      username:string;
 }
 
 export interface SerializableAuthenticable{
@@ -13,5 +17,5 @@ export class Authenticable implements AuthenticableInterface{
     constructor(username:string){
         this.username = username;
     }
-    readonly username: string;
+    username: string;
 }

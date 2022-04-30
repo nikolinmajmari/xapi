@@ -1,25 +1,21 @@
-import { HttpContextInterface } from "../../http/http.lib.ts";
+import { ContextInterface } from "../../app/mod.ts";
 import { AuthenticableInterface } from "./authenticable.ts";
 import { UserTokenInterface } from "./token.ts";
 
 /**
  * SecurityContextInterface,holds shared object accros middleware to authenticate a user request
  */
-export interface SecurityContextInterface extends HttpContextInterface{
-    security?:SecurityCoreInterface;
+export interface SecurityContextInterface<T extends AuthenticableInterface> extends ContextInterface{
+    security:UserSecurityCoreInterface<T>|undefined ;
 }
 
 /**
- * instance shared accross middleware context that authenticates the user 
- */
-export interface SecurityCoreInterface{
-    authenticate(user:AuthenticableInterface,attributes?:string[]):void;
-}
-/**
  * instance shared across middleware context that holds authentication information
  */
-export interface UserSecurityCoreInterface<T extends AuthenticableInterface> extends SecurityCoreInterface{
+export interface UserSecurityCoreInterface<T extends AuthenticableInterface> {
+    initAuth():Promise<void>;
     getUser():T|undefined;
+    authenticate(user:T,attributes?:string[]):void|Promise<void>;
     getToken():UserTokenInterface<T>|undefined;
     isAuthenticated():boolean|undefined;
 }

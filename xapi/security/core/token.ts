@@ -35,7 +35,6 @@ export class UserToken<T extends AuthenticableInterface> implements UserTokenInt
     }
     static fromJson<T extends AuthenticableInterface>(json:string):UserToken<T>|undefined{
         const jsonObject = JSON.parse(json);
-        console.log("parsing",jsonObject);
         return new UserToken<T>({
             user:jsonObject.user as T,
             attributes:jsonObject.attributes as [],
