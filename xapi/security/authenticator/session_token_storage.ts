@@ -24,4 +24,8 @@ export class SessionTokenStorage<T extends AuthenticableInterface> implements To
         await this.#session?.set(this.#key,str);
         await this.#session?.flush();
     }
+
+    async clearToken(){
+        await this.#session?.clear(this.#key,true);
+    }
 }

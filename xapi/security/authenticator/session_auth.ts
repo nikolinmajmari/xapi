@@ -47,6 +47,11 @@ export class SessionAuthContext<T extends Authenticable> implements UserSecurity
         this.#token = await this.#tokenStorage.loadToken();
     }
 
+    async destroy():Promise<void>{
+        await this.#tokenStorage.clearToken();
+        this.#token = undefined; 
+    }
+
     getUser(): T|undefined {
         return this.#token?.user;
     }
