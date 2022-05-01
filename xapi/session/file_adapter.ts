@@ -23,10 +23,6 @@ export class FileAdapter implements SessionAdapterInterface {
     return text;
   }
   async store(key: string, value: string): Promise<void> {
-    const fp = await Deno.open(this.sessionPath + "/" + key, {
-      create: true,
-      write: true,
-    });
-    await fp.writable.getWriter().write(new TextEncoder().encode(value));
+    await Deno.writeTextFile(this.sessionPath + "/" + key,value);
   }
 }

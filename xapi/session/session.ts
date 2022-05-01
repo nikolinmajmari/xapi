@@ -92,10 +92,12 @@ export class RequestSession {
 
   async get(key: string): Promise<any> {
     await this.initializeStore();
+    console.log(this.#store);
     return this.#store![key];
   }
 
   async flush() {
+    console.log("storing",JSON.stringify(this.#store));
     await this.#adapter.store(this.#id, JSON.stringify(this.#store));
   }
 }

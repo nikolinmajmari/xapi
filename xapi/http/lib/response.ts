@@ -48,7 +48,6 @@ export class XapiResponse {
    * @returns
    */
   headers(headers: {[key: string]: any}) {
-    console.log("etting headers", headers);
     for (const key in headers) {
       this.response.headers?.append(key, headers[key]);
     }
