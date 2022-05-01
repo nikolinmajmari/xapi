@@ -14,6 +14,7 @@ export interface SecurityContextInterface<T extends AuthenticableInterface> exte
  */
 export interface UserSecurityCoreInterface<T extends AuthenticableInterface> {
     initAuth():Promise<void>;
+    destroy():Promise<void>;
     getUser():T|undefined;
     authenticate(user:T,attributes?:string[]):void|Promise<void>;
     getToken():UserTokenInterface<T>|undefined;
