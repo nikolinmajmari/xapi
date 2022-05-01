@@ -69,6 +69,16 @@ export class RequestSession {
     }
   }
 
+  async clear(key:string,flush = false):Promise<void>{
+    if (this.#store == undefined) {
+      this.#store = await this.#adapter.load(this.#id);
+    }
+    delete this.#store[key];
+    if (flush) {
+      this.flush();
+    }
+  }
+
   async get(key: string): Promise<any> {
     if (this.#store == undefined) {
       let str = await this.#adapter.load(this.#id);
