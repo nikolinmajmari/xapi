@@ -50,7 +50,7 @@ export class SessionProvider {
 export class RequestSession {
   #adapter: SessionAdapterInterface;
   #id: string;
-  #store: any = undefined;
+  #store: {[key:string]:string}|undefined = undefined;
   get id(): string {
     return this.#id;
   }
@@ -59,36 +59,39 @@ export class RequestSession {
     this.#id = id;
   }
 
-  async set(key: string, value: string, flush: boolean = false): Promise<void> {
+  async initializeStore():Promise<void> {
     if (this.#store == undefined) {
-      this.#store = await this.#adapter.load(this.#id);
+      const sessionStr  = await this.#adapter.load(this.#id);
+      if(sessionStr!=""){
+        this.#store = JSON.parse(sessionStr??"");
+      }else{
+        this.#store = {};
+      }
     }
-    this.#store[key] = value;
+  }
+
+  async set(key: string, value: string, flush: boolean = false): Promise<void> {
+    await this.initializeStore();
+    console.log("the store",this.#store)
+    this.#store![key] = value;
     if (flush) {
       this.flush();
     }
   }
 
   async clear(key:string,flush = false):Promise<void>{
-    if (this.#store == undefined) {
-      this.#store = await this.#adapter.load(this.#id);
+    await this.initializeStore();
+    if(Object.prototype.hasOwnProperty.call(this.#store!,key)){
+      delete this.#store![key];
     }
-    delete this.#store[key];
     if (flush) {
       this.flush();
     }
   }
 
   async get(key: string): Promise<any> {
-    if (this.#store == undefined) {
-      let str = await this.#adapter.load(this.#id);
-      if (str == "") {
-        str = "{}";
-      }
-      console.log("to json", str);
-      this.#store = JSON.parse(str ?? "{}");
-    }
-    return this.#store[key];
+    await this.initializeStore();
+    return this.#store![key];
   }
 
   async flush() {
