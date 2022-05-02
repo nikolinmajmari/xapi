@@ -1,5 +1,4 @@
 import {XapiRequest} from "../deps.ts";
-import ViewCompilerInterface from "./compiler.ts";
 import type {Context} from "./context.ts";
 
 /**

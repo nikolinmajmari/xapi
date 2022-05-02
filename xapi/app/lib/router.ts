@@ -15,7 +15,7 @@ import {ContextInterface} from "./context.ts";
 export type FunctionHandler = (
   context: ContextInterface,
   next: () => Promise<void>
-) => Promise<void>;
+) => Promise<void>|void;
 
 /**
  *

@@ -4,6 +4,7 @@ import {
   TemplateParams,
   TemplateRenderInterface,
 } from "./template/render_engine.ts";
+import { HttpConstants } from "../deps.ts";
 
 /**
  * Web application instance
@@ -31,7 +32,7 @@ export class Application extends Router {
 
   async listen(port?: number): Promise<void> {
     this.completeMiddlewareWith(async (ctx, next) => {
-      await ctx.res.status(404).body("Not found").sent();
+      await ctx.res.notFound();
     });
 
     const routingContextFactory = new RoutingContextFactory();
@@ -62,26 +63,9 @@ export class Application extends Router {
           }
         })();
       } catch (err) {
-        // The listener has closed
+        // The listener has closed 
         break;
       }
-    }
-    while (true) {
-      const conn = await server.accept();
-      (async () => {
-        const httpConn = Deno.serveHttp(conn);
-        for await (const requestEvent of httpConn) {
-          this.handler
-            .handle(
-              routingContextFactory.createRoutingContextFrom(
-                new Context(requestEvent, this)
-              )
-            )
-            .catch((reason) => {
-              console.log(reason);
-            });
-        }
-      })();
     }
   }
 }

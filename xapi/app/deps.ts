@@ -14,4 +14,6 @@ export type {
 /**
  * import request response
  */
-export {XapiRequest, XapiResponse} from "../http/mod.ts";
+export {XapiRequest, XapiResponse,HttpConstants} from "../http/mod.ts";
+
+

@@ -92,7 +92,6 @@ export class RequestSession {
 
   async get(key: string): Promise<any> {
     await this.initializeStore();
-    console.log(this.#store);
     return this.#store![key];
   }
 
