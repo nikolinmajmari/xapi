@@ -17,6 +17,8 @@ export class Route {
     this.#method = method;
     this.#pattern = route;
     this.#isRegex = false;
+    this.#strictRegex = new RegExp(`^${this.pattern}$`);
+    this.#prefixRegex = new RegExp(`^${this.pattern}`);
   }
   bindToParent(parent: Route) {
     this.connectWithParent(parent);

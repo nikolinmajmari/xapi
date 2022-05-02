@@ -1,4 +1,4 @@
-import {ContextHandlerInterface} from "../deps.ts";
+import {ContextHandlerInterface, HttpConstants} from "../deps.ts";
 import {Router} from "./router.ts";
 interface StaticMiddlewareConfigParamsInterface {
   path: string;
@@ -41,13 +41,13 @@ export default function staticMiddleware(
       }
       const ext = fullpath.split(".").pop() ?? "";
       if (["JPEG", "png", "gif", "pdf", "json"].includes(ext)) {
-        ctx.res.headers({"content-type": `application/${ext}`});
+        ctx.res.setHeaders({"content-type": `application/${ext}`});
       } else if (["html", "css", "map", "js"].includes(ext)) {
-        ctx.res.headers({"content-type": `text/${ext}`});
+        ctx.res.setHeaders({"content-type": `text/${ext}`});
       } else if (await fp.statSync()) {
-        ctx.res.headers({"content-type": "text/plain"});
+        ctx.res.setHeaders({"content-type": "text/plain"});
       }
-      await ctx.res.body(fp.readable).statusOk().sent();
+      await ctx.res.setBody(fp.readable).setStatus(HttpConstants.httpStatusOk).sent();
     } catch (e) {
       next();
     }
