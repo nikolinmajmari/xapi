@@ -22,7 +22,8 @@ export class SessionAuth<T extends Authenticable>{
                 await authExtractor(ctx)?.initAuth();
                 ctx.locals.user = authExtractor(ctx)?.getUser()
             }catch(e){
-                console.log("auth could not be initiated because of ",e.toString());
+                console.log("auth could not be initiated because of ");
+                console.log(e);
             }
             await next();
         };

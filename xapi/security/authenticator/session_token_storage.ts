@@ -14,7 +14,7 @@ export class SessionTokenStorage<T extends AuthenticableInterface> implements To
 
     async loadToken(): Promise<UserTokenInterface<T>|undefined> {
         const str = await this.#session?.get(this.#key);
-        if(str==undefined){
+        if(str==undefined|| str==null||str==""){
             return undefined;
         }
         return UserToken.fromJson<T>(str);
