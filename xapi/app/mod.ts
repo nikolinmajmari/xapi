@@ -5,6 +5,7 @@ export type {ContextInterface} from "./lib/context.ts";
 
 import staticMiddleware from "./lib/static.ts";
 import etaEngine from "./lib/template/eta.ts";
+export type {TemplateRenderInterface,TemplateParams} from "./lib/template/render_engine.ts";
 const engines = {etaEngine};
 export {engines};
 export {staticMiddleware};
