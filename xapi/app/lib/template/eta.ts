@@ -7,8 +7,10 @@ import {
   configure,
   loadFile,
   render,
+  getConfig,
   renderAsync,
   renderFile,
+  config,
   renderFileAsync,
   parse,
 } from "https://deno.land/x/eta@v1.12.3/mod.ts";
@@ -20,15 +22,19 @@ const defaultConfig = {
 };
 
 class EtaRenderEngine implements TemplateRenderInterface {
-  configure(config: PartialConfig = defaultConfig): EtaRenderEngine {
+  #config:PartialConfig|undefined;
+  configure(config: PartialConfig): EtaRenderEngine {
     configure(config);
+    this.#config = {...defaultConfig,...config};
     return this;
   }
   async renderView(path: string, params: TemplateParams): Promise<string> {
-    return (await renderFile(path, params)) ?? "";
+    const fullPath = this.#config?.views+path;
+    const str = await Deno.readTextFile(fullPath);
+    return compile(str,this.#config)(params,config)
   }
 }
 
 const engine = new EtaRenderEngine();
 
-export default engine.configure();
+export default engine.configure(defaultConfig);
