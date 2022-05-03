@@ -62,9 +62,8 @@ export class RequestSession {
   async initializeStore():Promise<void> {
     if (this.#store == undefined) {
       const sessionStr  = await this.#adapter.load(this.#id);
-      console.log("parsing ",sessionStr);
-      if(sessionStr!=""){
-        this.#store = JSON.parse(sessionStr??"");
+      if(sessionStr!="" || sessionStr !=null){
+        this.#store = JSON.parse(sessionStr??"{}");
       }else{
         this.#store = {};
       }
