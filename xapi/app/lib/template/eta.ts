@@ -31,7 +31,7 @@ class EtaRenderEngine implements TemplateRenderInterface {
   async renderView(path: string, params: TemplateParams): Promise<string> {
     const fullPath = this.#config?.views+path;
     const str = await Deno.readTextFile(fullPath);
-    return compile(str,this.#config)(params,config)
+    return (await render(str,params,this.#config))as string;
   }
 }
 
