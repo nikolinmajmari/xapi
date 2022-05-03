@@ -8,9 +8,25 @@ import {Application} from "./app.ts";
  * @member response basic information of the request
  */
 export interface ContextInterface {
+
+  /**
+   * request
+   */
   req: ContextRequest;
+
+  /**
+   * response
+   */
   res: ContextResponse;
+
+  /**
+   * attribs
+   */
   attribs: {[key: string]: any};
+  /**
+   * variables shared across middleware. Different from attribs these values are shared across the view also 
+   */
+  locals:{[key:string]:any}
 }
 
 /**
@@ -34,6 +50,7 @@ export class Context implements ContextInterface {
     this.req = new ContextRequest(this);
     this.res = new ContextResponse(this);
   }
+  locals: { [key: string]: any; } = {};
   req: ContextRequest;
   res: ContextResponse;
   attribs = {};

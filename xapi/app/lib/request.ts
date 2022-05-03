@@ -13,4 +13,11 @@ export class ContextRequest extends XapiRequest {
     super(ctx.event.request);
     this.#ctx = ctx;
   }
+
+  get isJson():boolean{
+    return this.headers.get("Content-type")=="application/json";
+  }
+  get isApplicationFormUrlEncoded():boolean{
+    return this.headers.get("Content-type")=="application/x-www-form-urlencoded"; 
+  }
 }

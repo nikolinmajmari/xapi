@@ -38,6 +38,5 @@ export function getCookies(request: XapiRequest) {
 export function setCookie(response: XapiResponse, cookie: HttpCookie) {
   const resInit = {headers: new Headers()};
   setcookie(resInit, cookie);
-  console.log(resInit);
   response.setHeaders({"set-cookie": resInit.headers.get("set-cookie")});
 }

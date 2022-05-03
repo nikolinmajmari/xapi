@@ -33,7 +33,7 @@ export class UserToken<T extends AuthenticableInterface> implements UserTokenInt
     has(attribute: string): boolean {
         return this.attributes.has(attribute);
     }
-    static fromJson<T extends AuthenticableInterface>(json:string):UserToken<T>|undefined{
+    static fromJson<T extends AuthenticableInterface>(json:string,):UserToken<T>|undefined{
         const jsonObject = JSON.parse(json);
         return new UserToken<T>({
             user:jsonObject.user as T,

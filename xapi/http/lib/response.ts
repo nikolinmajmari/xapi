@@ -110,7 +110,6 @@ export class XapiResponse implements StatusCodeInterface {
     if (this.#sent) {
       throw "Response is already sent";
     }
-    console.log(this.headers);
     await this.#event.respondWith(
       new Response(body, {
         headers: this.headers,
