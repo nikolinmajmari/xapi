@@ -10,3 +10,6 @@
 [submodule "apps/xapi_chat_app_jsx"]
 	path = apps/xapi_chat_app_jsx
 	url = https://github.com/nikolinmajmari/xapi_chat_app_jsx
+[submodule "xapi/session"]
+	path = xapi/session
+	url = https://github.com/nikolinmajmari/xapi-session
