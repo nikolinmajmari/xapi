@@ -7,3 +7,6 @@
 [submodule "apps/xapi_example_chat_app"]
 	path = apps/xapi_example_chat_app
 	url = https://github.com/nikolinmajmari/xapi_example_chat_app.git
+[submodule "apps/xapi_chat_app_jsx"]
+	path = apps/xapi_chat_app_jsx
+	url = https://github.com/nikolinmajmari/xapi_chat_app_jsx

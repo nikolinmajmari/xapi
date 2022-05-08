@@ -4,5 +4,3 @@ export interface TemplateRenderInterface {
 }
 
 export type TemplateParams = {[key: string]: TemplateParams | any};
-
-export class RenderEngineFactory {}
